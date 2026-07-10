@@ -8,7 +8,86 @@ If you're targeting a **Forward Deployment Engineer (FDE)** role (such as at com
 * System design
 * Production deployment
 
-The fastest way to prepare is to **learn while building real deployment projects**.
+**Platform Engineering evolved from DevOps**, and they share many of the same tools. The biggest difference is **who you're building for** and **what your primary responsibility is**.
+
+Here's a comparison:
+
+| DevOps Engineer                                        | Platform Engineer                                        |
+| ------------------------------------------------------ | -------------------------------------------------------- |
+| Supports application teams                             | Builds a platform that application teams use themselves  |
+| Works directly with individual application deployments | Creates reusable infrastructure and self-service tools   |
+| Often owns CI/CD for one or a few teams                | Builds standardized CI/CD templates for many teams       |
+| Solves team-specific operational issues                | Solves organization-wide engineering problems            |
+| Focuses on delivery and operations                     | Focuses on developer experience and platform reliability |
+
+### Example
+
+Imagine a company has **50 development teams**.
+
+#### DevOps Engineer
+
+A DevOps engineer might:
+
+* Create a CI/CD pipeline for Team A.
+* Help Team B deploy a microservice.
+* Investigate why Team C's deployment failed.
+* Manage infrastructure for a specific product.
+
+They spend a lot of time responding to the needs of individual teams.
+
+#### Platform Engineer
+
+A Platform Engineer might instead:
+
+* Build a reusable CI/CD template that all 50 teams can adopt.
+* Create a Kubernetes platform where developers can deploy applications without opening infrastructure tickets.
+* Build an internal developer portal that provisions environments automatically.
+* Define standard monitoring, logging, and security that every application inherits.
+
+The goal is to reduce repetitive work by making common tasks self-service.
+
+### Tool overlap
+
+The tools are often the same:
+
+* Docker
+* Kubernetes
+* Terraform
+* AWS/Azure/GCP
+* GitHub Actions
+* Argo CD
+* Prometheus
+* Grafana
+
+The difference is **how they're used**.
+
+For example, with Terraform:
+
+* A DevOps engineer might write Terraform for one application's infrastructure.
+* A Platform Engineer might create reusable Terraform modules so dozens of teams can provision infrastructure consistently.
+
+With Kubernetes:
+
+* A DevOps engineer deploys and troubleshoots applications.
+* A Platform Engineer builds and maintains the Kubernetes platform itself, including networking, policies, add-ons, upgrades, and developer onboarding.
+
+### Analogy
+
+Think of a city:
+
+* **DevOps Engineer** = A mechanic who keeps individual cars running.
+* **Platform Engineer** = The team that designs and maintains the roads, traffic systems, and fuel stations so everyone can travel efficiently.
+
+Both work with transportation, but at different levels.
+
+### Which role should you target?
+
+If you have **2–5 years of DevOps experience**, moving into Platform Engineering is often a natural progression. Many companies view platform engineering as a more specialized role focused on scalability and developer productivity.
+
+If you're just starting your career, aiming for a **DevOps Engineer** role first is common. You'll build experience with cloud infrastructure, automation, containers, CI/CD, and monitoring. Those skills transfer directly into Platform Engineering later.
+
+In practice, many organizations still use the titles interchangeably. One company's "Platform Engineer" may do work that another company calls "Senior DevOps Engineer." The job description and day-to-day responsibilities usually tell you more than the title alone.
+
 
 ---
 
