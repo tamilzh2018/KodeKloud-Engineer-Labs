@@ -96,3 +96,48 @@ Success
 On branch master
 nothing to commit, working tree clean
 ```
+🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is DVC?**
+DVC (Data Version Control) is a tool used in Machine Learning projects to track:
+
+Datasets Models Large files
+
+without storing them directly in Git.
+
+Think of it like:
+
+Git -> tracks code DVC -> tracks data and models
+
+**Why are we running dvc init?**
+The repository already exists as a Git project.
+
+When we run:
+
+dvc init
+
+DVC adds its own management files:
+
+.dvc/ .dvcignore
+
+These files tell DVC how to manage datasets and model artifacts.
+
+What does .dvc/ contain?
+Example:
+
+.dvc/ ├── config ├── .gitignore └── tmp/
+
+These files store DVC configuration information.
+
+Why do we commit the DVC files?
+The lab specifically says:
+
+Record the initialization in Git.
+
+This means the new DVC files must be saved in Git history.
+
+So we:
+
+git add .dvc .dvcignore git commit -m "Initialize DVC"
+
+This creates a permanent record that DVC was enabled in the project.
