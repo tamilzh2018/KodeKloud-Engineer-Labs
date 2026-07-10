@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 The xFusionCorp Industries ML team uses `uv` and lockfiles to keep Python dependencies reproducible across machines. A teammate has left behind a `requirements.in` specification that does not match the team's standard. Correct it and compile it into a pinned lockfile.
 
@@ -23,7 +23,8 @@ The xFusionCorp Industries ML team uses `uv` and lockfiles to keep Python depe
 
 ---
 
-Solution
+# Solution
+🧭 Part 1: Lab Step-by-Step Guidelines
 
 Original file (requirements.in)
 
@@ -328,3 +329,83 @@ yarl==1.23.0
 zipp==3.23.1
     # via importlib-metadata
 ```
+🧠 Part 2: Simple Beginner-Friendly Explanation
+
+**What is requirements.in?**
+
+requirements.in is a high-level dependency file.
+
+It describes:
+
+“These are the packages my project needs.”
+
+Example:
+
+numpy>=1.26
+
+This means:
+
+install numpy any compatible version newer than 1.26
+
+**What is a Lockfile?**
+
+The generated:
+
+requirements.txt
+
+is a fully pinned dependency lockfile.
+
+It contains:
+
+exact package versions every dependency required underneath
+
+Example:
+
+numpy==1.26.4
+
+This guarantees:
+
+reproducible installs same environment on every machine
+
+**Why Use uv pip compile?**
+
+Command:
+
+uv pip compile requirements.in -o requirements.txt
+
+does the following:
+
+reads requirements.in resolves compatible versions locks exact versions includes transitive dependencies
+
+Difference Between Top-Level and Transitive Dependencies
+
+Top-Level Dependencies
+
+Packages you explicitly request:
+
+numpy pandas mlflow scikit-learn
+
+Transitive Dependencies
+
+Packages automatically required by those libraries.
+
+Example:
+
+pandas may require: python-dateutil pytz mlflow may require many extra libraries
+
+These appear automatically in:
+
+requirements.txt
+
+Why Exact == Versions Matter
+
+Example:
+
+numpy==1.26.4
+
+This prevents:
+
+unexpected upgrades dependency conflicts “works on my machine” problems
+
+It ensures all developers use identical versions.
+

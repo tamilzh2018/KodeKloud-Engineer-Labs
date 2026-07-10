@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 The xFusionCorp Industries data science team needs a standardised Python environment for their new ML project. Set up a virtual environment with the required ML libraries on the `controlplane` host.
 
@@ -10,7 +10,8 @@ The xFusionCorp Industries data science team needs a standardised Python environ
 
 ---
 
-Solution
+# Solution
+🧭 Part 1: Lab Step-by-Step Guidelines
 
 Create virtual environment
 
@@ -53,4 +54,68 @@ Freeze packages
 ```shell
 pip freeze > requirements.txt
 ```
+🧠 Part 2: Simple Beginner-Friendly Explanation
+
+**What is a virtual environment?**
+
+A virtual environment is an isolated Python workspace. It keeps project packages separate from the system Python packages.
+
+This helps:
+
+avoid package conflicts keep projects clean make setups reproducible Step Breakdown
+
+Step 1 — Create /root/code
+
+mkdir -p /root/code mkdir = make directory -p = create parent directories if needed
+
+This creates the folder where the project will live.
+
+Step 2 — Create the virtual environment
+
+python3 -m venv /root/code/ml-env
+
+**Explanation:**
+
+python3 → use Python 3 -m venv → run Python’s built-in virtual environment module /root/code/ml-env → name and location of the environment
+
+This creates:
+
+isolated Python binaries isolated package storage
+
+Step 3 — Activate the environment
+
+source /root/code/ml-env/bin/activate
+
+**This tells the shell:**
+
+“Use the Python and pip inside ml-env.”
+
+Without activation, packages may install globally instead.
+
+Step 4 — Install ML libraries
+
+pip install numpy pandas scikit-learn matplotlib
+
+What each library does:
+
+Package Purpose numpy Numerical computing pandas Data analysis & tables scikit-learn Machine learning matplotlib Data visualization & plotting
+
+Step 5 — Save installed packages
+
+pip freeze > /root/code/requirements.txt pip freeze lists installed packages
+
+writes output into a file
+
+This creates a reusable dependency file.
+
+Example:
+
+numpy==2.x.x pandas==2.x.x scikit-learn==1.x.x matplotlib==3.x.x
+
+Step 6 — Verify
+
+cat /root/code/requirements.txt
+
+This displays the contents of the file to confirm everything was saved correctly.
+
 

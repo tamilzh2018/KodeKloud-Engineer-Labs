@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 The xFusionCorp Industries ML platform team maintains a Cookiecutter template that new ML projects are generated from. A draft template exists at `/root/code/mlops-template/`, but it does not render. Correct the template and use it to generate a project.
 
@@ -33,7 +33,8 @@ The xFusionCorp Industries ML platform team maintains a Cookiecutter template th
 
 ---
 
-Solution
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 
 Original cookiecutter.json
 
@@ -160,3 +161,58 @@ Notes
   choices variable — a plain string would be used as a literal default
   and the if/elif conditions in requirements.txt would never match
 ```
+🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is broken?**
+A Cookiecutter template is a project blueprint. Cookiecutter reads:
+cookiecutter.json template folders template files and generates a new project.
+
+If any variable names, folder names, or Jinja syntax are wrong, rendering fails.
+
+Why do we need cookiecutter.json? This file tells Cookiecutter which values users can provide.
+**Required values:**
+
+Variable Default project_name my-ml-project author xFusionCorp python_version 3.11 ml_framework sklearn / pytorch / tensorflow
+
+Why use {{cookiecutter.project_name}}? Cookiecutter replaces:
+{{cookiecutter.project_name}}
+
+with:
+
+churn-model
+
+when generating the project.
+
+So the generated folder becomes:
+
+/root/code/churn-model
+
+Why use Jinja conditions in requirements.txt?
+The lab wants different packages depending on the framework.
+
+If:
+
+ml_framework=sklearn
+
+then output:
+
+scikit-learn
+
+If:
+
+ml_framework=pytorch
+
+then output:
+
+torch
+
+If:
+
+ml_framework=tensorflow
+
+then output:
+
+tensorflow
+
+Jinja if/elif statements make this happen automatically.
+

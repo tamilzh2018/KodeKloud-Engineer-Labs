@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 The xFusionCorp Industries ML team uses a Makefile to orchestrate common tasks—data processing, training, testing, and cleanup. A draft `Makefile`exists at `/root/code/fraud-detection/Makefile`, but `make all` does not complete successfully. Bring the Makefile in line with the team's standard.
 
@@ -20,7 +20,8 @@ Makefile recipes must be indented with a real tab character, not spaces. Make re
 
 ---
 
-Solution
+# Solution
+🧭 Part 1: Lab Step-by-Step Guidelines
 
 Original Makefile (/root/code/fraud-detection/Makefile)
 
@@ -92,4 +93,90 @@ Execute Makefile
 ```shell
 make all
 ```
+
+🧠 Part 2: Simple Beginner-Friendly Explanation
+
+**What is a Makefile?**
+
+A Makefile is an automation script used with the make command.
+
+It helps automate repetitive tasks such as:
+
+setting up environments processing data training models running tests cleaning project files
+
+Instead of typing many commands manually, developers can run:
+
+make all
+
+Understanding Each Required Target
+
+setup
+
+Creates the virtual environment and installs dependencies.
+
+setup: python3 -m venv mlops-venv
+
+This creates an isolated Python environment named:
+
+mlops-venv/
+
+Then dependencies are installed from:
+
+requirements.txt
+
+data Runs the data processing script.
+
+data: ./mlops-venv/bin/python src/data/process_data.py
+
+This step usually:
+
+loads raw data cleans data transforms datasets
+
+train Runs the machine learning training script.
+
+train: ./mlops-venv/bin/python src/models/train.py
+
+This step trains the ML model.
+
+test Runs automated tests.
+
+test: ./mlops-venv/bin/pytest tests/
+
+This checks whether the project works correctly.
+
+clean Removes temporary/generated files.
+
+clean: It removes: Python cache folders pytest cache generated model files This keeps the project clean.
+
+all Runs the entire workflow.
+
+all: setup data train test This means: setup process data train model run tests
+
+in that exact order.
+
+Why .PHONY Is Important .PHONY: setup data train test clean all
+
+Without .PHONY, Make may confuse target names with actual files or directories.
+
+Example: if a folder named test/ exists Make might incorrectly think the target already completed
+
+.PHONY forces Make to always run the commands.
+
+Why TAB Characters Matter Makefiles are very strict.
+
+Recipe lines must start with: a real TAB character
+
+NOT: spaces
+
+Correct:
+
+setup: python3 -m venv mlops-venv
+
+Incorrect:
+
+setup: python3 -m venv mlops-venv
+
+Using spaces causes errors like:
+
+missing separator
 

@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 The xFusionCorp Industries ML team enforces code quality on every commit via `pre-commit`. A draft `.pre-commit-config.yaml` exists in the git repository at `/root/code/fraud-detection/`, but it does not match the team's standard and `pre-commit run --all-files`fails against it. Correct the configuration.
 
@@ -25,7 +25,8 @@ The xFusionCorp Industries ML team enforces code quality on every commit via `p
 
 ---
 
-Solution
+# Solution
+🧭 Part 1: Lab Step-by-Step Guidelines
 
 Navigate into required directory
 
@@ -140,3 +141,44 @@ ruff check...............................................................Passed
 black....................................................................Passed
 ```
 
+🧠 Part 2: Simple Beginner-Friendly Explanation
+
+**What is Pre-Commit?**
+
+Pre-commit is a tool that automatically checks code before it is committed to Git.
+
+It helps catch: formatting problems linting issues whitespace errors configuration mistakes before code reaches the repository.
+
+**What is .pre-commit-config.yaml?** 
+This file tells pre-commit:
+
+which checks to run where the hooks come from which versions to use
+
+Each hook is downloaded from a Git repository.
+
+Why rev: Is Required Example:
+
+repo: https://github.com/pre-commit/pre-commit-hooks rev: v6.0.0
+The rev: field pins the hook to a specific release.
+
+Benefits: reproducible behavior same version for every developer prevents unexpected changes
+
+The lab requires every repository entry to have a rev: field.
+
+Understanding the Required Hooks trailing-whitespace Removes spaces at the ends of lines. Bad: hello···
+
+Good: hello
+
+end-of-file-fixer Ensures files end with a single newline. Many tools expect this format.
+
+check-yaml Validates YAML syntax. Useful for files such as: .pre-commit-config.yaml docker-compose.yml
+
+ruff Runs Ruff linting checks on Python code. Detects: unused imports syntax issues import ordering problems
+
+black Formats Python code automatically. Ensures all developers use the same code style.
+
+What pre-commit autoupdate Does Command: pre-commit autoupdate automatically updates: rev: to the latest released versions. This is the recommended way to obtain current release tags.
+
+Why You May Need to Run Hooks Twice Some hooks automatically fix files. Example: Black reformats Python code trailing-whitespace removes extra spaces
+
+The first run modifies files. The second run verifies everything is clean.
