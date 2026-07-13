@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries data science team compares multiple training runs with different hyperparameters using DVC experiments. Run three experiments that vary the `n_estimators`hyperparameter, identify the best-performing one, and promote it to the tracked workspace.
 
@@ -16,8 +16,8 @@ The xFusionCorp Industries data science team compares multiple training runs wit
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 dvc.yaml (provided)
 
 ```yaml
@@ -148,3 +148,65 @@ metrics.json  0.94        0.92
 Screenshot of verification
 
 ![Screenshot](<../screenshots/Screenshot Day 17.png>)
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is a DVC Experiment?**
+Normally, if you want to test a new model configuration, you would:
+
+Edit params.yaml. Run dvc repro. Record the results. Repeat.
+
+This becomes tedious and makes it hard to compare experiments.
+
+DVC Experiments automate this process.
+
+**Why run multiple experiments?**
+Different values of max_depth can affect model performance.
+
+For example:
+
+max_depth = 2
+
+A very shallow tree may underfit the data.
+
+max_depth = 6
+
+May provide a good balance.
+
+max_depth = 12
+
+A deeper tree may overfit.
+
+The goal is to find the value that gives the best f1_score.
+
+**What does dvc exp run do?**
+When you run:
+
+dvc exp run -S max_depth=6
+
+DVC temporarily changes:
+
+max_depth: 6
+
+runs the pipeline, records the metrics, and saves the results as a named experiment.
+
+Your Git history remains unchanged.
+
+**Why use dvc exp show?**
+Instead of opening each metrics.json manually, DVC displays all experiments together.
+
+Example:
+
+Experiment max_depth accuracy f1_score
+exp-A 2 0.88 0.84 exp-B 6 0.94 0.92 exp-C 12 0.93 0.90
+
+This makes it easy to compare different parameter values.
+
+**What does dvc exp apply do?**
+Once you've found the experiment with the highest f1_score, apply it:
+
+dvc exp apply exp-B
+
+This updates your workspace so that it reflects the best experiment:
+
+params.yaml uses the winning max_depth. metrics.json contains the winning metrics. models/model.pkl is the model trained with those parameters.
+

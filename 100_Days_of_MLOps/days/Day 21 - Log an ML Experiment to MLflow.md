@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 A xFusionCorp Industries data scientist needs a training run recorded in MLflow so the team has a baseline record on the tracking dashboard. The non-MLflow scaffolding has already been written at /root/code/log_experiment.py; the MLflow logging calls are left as TODO blocks. Your task is to complete the script so that every element of the run is captured by the MLflow tracking server.
 
@@ -16,8 +16,8 @@ The result can be confirmed in the MLflow UI—once the run is opened, the Param
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 log_experiment.py (original)
 
 ```python

@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries ML platform team is onboarding two new ML projects and needs each one organised under its own MLflow experiment rather than sharing the `Default` experiment. Your task is to register both experiments through the **MLflow UI** and tag them with the owning team.
 
@@ -19,8 +19,8 @@ The xFusionCorp Industries ML platform team is onboarding two new ML projects an
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 **Create `fraud-detection`**
 
 1. Open the MLflow UI → click **"Create Experiment"** (top-right or sidebar button).

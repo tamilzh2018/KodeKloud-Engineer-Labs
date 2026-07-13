@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries ML platform team needs two trained candidates promoted through the **MLflow Model Registry** so the ops side can track which model version is serving production traffic. Both runs already exist in the `fraud-detection` experiment. Your task is to register both as versions of a new `fraud-detector`model, add a model-level description, and assign `challenger` and `champion` aliases—all through the MLflow UI.
 
@@ -17,8 +17,8 @@ The xFusionCorp Industries ML platform team needs two trained candidates promote
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 ### Step 1 — Register the baseline run as Version 1
 
 1. Open the MLflow UI (port 5000) and click the **fraud-detection** experiment.

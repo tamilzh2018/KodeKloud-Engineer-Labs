@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 A xFusionCorp Industries data scientist has trained three candidate models on the same problem and logged them to the `model-comparison` experiment. Your task is to review the candidates side by side in the **MLflow UI** and explicitly mark the winning run so downstream tooling can pick it up.
 
@@ -15,8 +15,8 @@ A xFusionCorp Industries data scientist has trained three candidate models on th
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 Click the MLflow UI button to open dashboard
 
 ![Dashboard](<../screenshots/Screenshot Day 26 dashboard.png>)

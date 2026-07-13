@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries ML platform team packages their training runs as **MLflow Projects** so any engineer can reproduce them with a single `mlflow run` invocation. A project has been pre-staged at `/root/code/trainer/`, but the first run from the lab startup already failed—the MLproject file carries a subtle command-line bug. Your task is to fix the bug and then run the project end to end twice so successful runs are recorded.
 
@@ -24,8 +24,8 @@ The xFusionCorp Industries ML platform team packages their training runs as **M
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 [train.py](<../assets/Day 28 - train.py>) (proivded) Do Not Modify
 
 MLproject (provided)

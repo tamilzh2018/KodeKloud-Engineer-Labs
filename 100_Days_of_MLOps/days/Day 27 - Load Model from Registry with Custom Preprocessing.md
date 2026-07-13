@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries deployment team needs a batch-prediction wrapper around the registered `fraud-detector` champion model, complete with custom preprocessing, before the model is exposed to downstream services. The wrapper class is pre-written. Your task is to complete the MLflow-side plumbing that loads the champion and runs the batch.
 
@@ -25,8 +25,8 @@ The end state must include:
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 predict_with_preprocessing.py (provided)
 
 ```python

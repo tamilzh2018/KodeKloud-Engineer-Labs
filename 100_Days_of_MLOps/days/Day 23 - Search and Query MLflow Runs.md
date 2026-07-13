@@ -1,5 +1,4 @@
-Prompt
-
+# Lab Information
 A xFusionCorp Industries data scientist has accumulated ten runs in the `fraud-detection` MLflow experiment. Your task is to triage those runs via the **MLflow UI**: mark the single best-performing candidate as the shortlisted model, and flag every clearly under-performing run for removal.
 
 1. The MLflow tracking server is already running on port `5000`, and the `fraud-detection` experiment has been pre-populated with ten runs. The runs can be viewed via the **MLflow UI** button → `fraud-detection`experiment.
@@ -14,8 +13,8 @@ A xFusionCorp Industries data scientist has accumulated ten runs in the `fraud-
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 - Click MLflow UI button
 
 ![Start](<../screenshots/Screenshot Day 23 Start.png>)

@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 After training a model, the xFusionCorp Industries ML team wants DVC to surface metrics through `dvc metrics show` and the DVC extension's METRICS view. The fraud-detection pipeline already trains a model and writes a `metrics.json`, but DVC does not recognise the file as a metric. Wire it in correctly.
   
@@ -16,8 +16,8 @@ After training a model, the xFusionCorp Industries ML team wants DVC to surface 
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 dvc.yaml
 
 ```yaml
@@ -142,3 +142,79 @@ metrics.json  1.0         1.0
 ```
 
 ![Verify Screenshot](<../screenshots/Screenshot Day 16.png>)
+
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is metrics.json?**
+After training the model, the Python script creates a file called:
+
+metrics.json
+
+It contains information about how well the model performed.
+
+For example:
+
+{ "accuracy": 1.0, "f1_score": 1.0 }
+
+These numbers help you evaluate the model.
+
+**Why doesn't DVC recognize it automatically?**
+DVC only knows about files that are declared in dvc.yaml.
+
+Currently, DVC knows about:
+
+input files (deps) output files (outs) parameters (params)
+
+It doesn't know that metrics.json contains evaluation metrics.
+
+**Why use metrics: instead of outs:?**
+Regular outputs:
+
+outs:
+
+models/model.pkl
+are treated as artifacts (files produced by the pipeline).
+
+Metrics are different—they are values you want to compare between experiments.
+
+So we use:
+
+metrics:
+
+metrics.json: cache: false
+This tells DVC:
+
+metrics.json contains evaluation metrics. Keep it in Git (cache: false) instead of storing it in the DVC cache. Allow commands like dvc metrics show and dvc metrics diff to read it.
+
+**Why cache: false?**
+Normally, DVC stores outputs in its cache.
+
+For metrics, we want the JSON file to stay in the Git repository because:
+
+it's small, it's easy to compare between commits, Git can track its history.
+
+That's why the lab requires:
+
+cache: false
+
+**What does dvc metrics show do?**
+After running:
+
+dvc repro
+
+you can execute:
+
+dvc metrics show
+
+Instead of opening metrics.json manually, DVC displays the important values in a table, for example:
+
+Path accuracy f1_score metrics.json 1.0 1.0
+
+**What is dvc metrics diff?**
+As you experiment with different model parameters (such as n_estimators), the metrics may change.
+
+Running:
+
+dvc metrics diff
+
+compares the metric values across Git commits, making it easy to see whether the new model performed better or worse.

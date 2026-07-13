@@ -1,5 +1,4 @@
-Prompt
-
+# Lab Information
 The xFusionCorp Industries ML team keeps different dataset and model versions on different Git branches so that the team can roll between versions cleanly. Tag the current state as `v1.0`, produce a `v2-improved`branch based on a newer dataset, and confirm that switching back restores the original data.
 
 
@@ -18,8 +17,8 @@ The xFusionCorp Industries ML team keeps different dataset and model versions on
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 Navigate to working directory
 
 ```shell
@@ -91,4 +90,75 @@ Comparing indexes                                        |8.00 [00:00, 3.50kentr
 Applying changes                                          |1.00 [00:00, 1.20kfile/s]
 M       data/raw/transactions.csv
 ```
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**Why do we create a Git tag?**
+The command:
+
+git tag v1.0
+
+creates a permanent label for the current project state.
+
+Think of it as taking a snapshot:
+
+main │ ├── v1.0 ← Snapshot
+
+You can always return to exactly this version later.
+
+**Why create a new branch?**
+Instead of changing the main branch directly, we create:
+
+v2-improved
+
+This allows us to safely experiment with a new dataset.
+
+The structure becomes:
+
+main │ └── v2-improved
+
+**Why run dvc add again?**
+The file name stays the same:
+
+transactions.csv
+
+but its contents change because you copied in the improved dataset.
+
+DVC tracks file contents (using hashes), not just filenames.
+
+Running:
+
+dvc add data/raw/transactions.csv
+
+updates the .dvc pointer to reference the new dataset version.
+
+**Why rerun the pipeline?**
+The dataset changed.
+
+That means:
+
+transactions.csv │ ▼ process_data ▼ split_data ▼ train ▼ model.pkl
+
+Every downstream stage depends on the dataset, so DVC reruns the pipeline to produce a model trained on the new data.
+
+**Why use dvc checkout?**
+When you switch back to:
+
+git checkout main
+
+Git restores:
+
+dvc.yaml .dvc files dvc.lock
+
+However, Git does not restore the actual dataset or model, because DVC manages those files.
+
+Running:
+
+dvc checkout
+
+reads the .dvc files and restores the correct versions of:
+
+transactions.csv model.pkl
+
+from the DVC cache.
+
 

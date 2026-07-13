@@ -1,4 +1,4 @@
-Prompt
+# Lab Information:
 
 A teammate has added the transactions dataset to the xFusionCorp Industries fraud-detection repository, but it was committed directly to Git instead of being tracked with DVC. Bring the repository in line with the team standard—every dataset under `data/` must be tracked by DVC, not by Git.
 
@@ -16,7 +16,8 @@ A teammate has added the transactions dataset to the xFusionCorp Industries frau
 
 ---
 
-Solution
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 
 Navigate to repo
 
@@ -109,3 +110,74 @@ This avoids:
 - slow clones
 - corrupted histories
 - binary diff nightmares
+
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is the problem?**
+Right now:
+
+Git └── data/raw/transactions.csv
+
+Git is tracking a dataset file.
+
+The team standard says:
+
+Git → track code and metadata DVC → track datasets and models
+
+So we need to move ownership of the dataset from Git to DVC.
+
+**Why use git rm --cached?**
+
+If you run:
+
+git rm data/raw/transactions.csv
+
+Git removes the file completely.
+
+We don't want that.
+
+Instead:
+
+git rm --cached data/raw/transactions.csv
+
+removes it only from Git tracking.
+
+The file remains on disk:
+
+data/raw/transactions.csv
+
+**What does dvc add do?**
+When you run:
+
+dvc add data/raw/transactions.csv
+
+DVC creates a pointer file:
+
+data/raw/transactions.csv.dvc
+
+Think of it as:
+
+transactions.csv.dvc ↓ points to ↓ transactions.csv
+
+Git stores the small .dvc file instead of the large dataset.
+
+**Why is .gitignore created?**
+DVC automatically adds:
+
+data/raw/.gitignore
+
+so Git ignores:
+
+transactions.csv
+
+This prevents someone from accidentally committing the dataset again.
+
+**What gets committed to Git?**
+After migration, Git stores:
+
+data/raw/transactions.csv.dvc data/raw/.gitignore
+
+Git no longer stores:
+
+data/raw/transactions.csv
+

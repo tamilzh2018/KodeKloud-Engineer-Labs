@@ -1,5 +1,4 @@
-Prompt
-
+# Lab Information
 The xFusionCorp Industries ML team wants to replace the manual `log_param` / `log_metric` boilerplate in their training scripts with MLflow's autologging feature, so every training run captures its constructor parameters, training metrics, and model artefact automatically. A training scaffold has been pre-staged at `/root/code/autolog_experiment.py`—it configures MLflow, fits a small synthetic sklearn model, and prints a confirmation message. Two `# TODO` blocks remain empty. Your task is to complete them so the end state below holds.
 
   
@@ -25,8 +24,8 @@ Confirm the result in the **MLflow UI**.
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 autolog_experiment.py (original)
 
 ```python

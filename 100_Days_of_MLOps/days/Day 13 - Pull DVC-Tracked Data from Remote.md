@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 A new xFusionCorp Industries team member has cloned the fraud-detection repository onto a fresh machine. The DVC remote is already configured to point at the team's SeaweedFS bucket, but `dvc pull`is failing. Diagnose the cause, correct the configuration, and pull the dataset.
 
@@ -20,8 +20,8 @@ A new xFusionCorp Industries team member has cloned the fraud-detection reposito
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 Navigate to repo
 
 ```shell
@@ -84,4 +84,58 @@ Output
 ```shell
 Data and pipelines are up to date.
 ```
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What happened?**
+
+A teammate cloned the Git repository onto a new machine.
+
+Git downloaded:
+
+transactions.csv.dvc
+
+but not:
+
+transactions.csv
+
+because DVC-managed data is stored separately from Git.
+
+**Why is the file missing?**
+
+Git only stores the small pointer file:
+
+transactions.csv.dvc
+
+The actual dataset lives in SeaweedFS:
+
+SeaweedFS Bucket └── dvc-storage
+
+To download it, DVC must connect to the remote storage.
+
+**Why is dvc pull failing?**
+
+The lab says:
+
+Review .dvc/config and correct everything that prevents dvc pull from authenticating.
+
+This means the most likely issue is incorrect credentials.
+
+Required credentials:
+
+access_key_id = weedadmin secret_access_key = weedadmin123
+
+If either value is wrong, DVC cannot access the SeaweedFS bucket.
+
+**What does dvc pull do?**
+
+When you run:
+
+dvc pull
+
+DVC:
+
+Reads transactions.csv.dvc Finds the file hash Connects to SeaweedFS Downloads the matching object Restores: data/raw/transactions.csv
+
+onto your machine
+
 

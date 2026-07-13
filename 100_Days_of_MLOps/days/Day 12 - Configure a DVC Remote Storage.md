@@ -1,4 +1,4 @@
-Prompt
+# Lab Information
 
 The xFusionCorp Industries ML team uses SeaweedFS as the shared S3-compatible object store for DVC-tracked data. A `.dvc/config` already declares a remote called `s3` for the fraud-detection project, but `dvc push` currently fails. Correct the configuration and push the tracked data into the SeaweedFS bucket.
 
@@ -20,8 +20,8 @@ The xFusionCorp Industries ML team uses SeaweedFS as the shared S3-compatible ob
 
 ---
 
-Solution
-
+# Solution
+✅ Part 1: Lab Step-by-Step Guidelines
 Original config (/root/code/fraud-detection/.dvc/config)
 
 ```shell
@@ -73,3 +73,52 @@ dvc push
 Verify result using SeaweedFS link
 
 ![SeaweedFS Screenshot](<../screenshots/Screenshot Day 12.png>)
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+**What is happening in this lab?**
+Previously, DVC was tracking the dataset locally.
+
+Right now:
+
+transactions.csv ↓ transactions.csv.dvc
+
+But the actual file content is only stored on your machine.
+
+The team wants all datasets backed up to a shared storage system.
+
+**What is SeaweedFS?**
+SeaweedFS is acting like a private Amazon S3 service.
+
+Think of it as:
+
+Local Machine ↓ DVC ↓ SeaweedFS Bucket
+
+Instead of storing datasets in Git, DVC stores them in the bucket.
+
+**Why does dvc push fail?**
+Usually because one of these is wrong:
+
+Wrong bucket name Wrong endpoint URL Remote not set as default
+
+The lab specifically tells us the correct values:
+
+Bucket: dvc-storage Endpoint: http://localhost:8333 Remote: s3
+
+**What does dvc remote default s3 do?**
+It tells DVC:
+
+Whenever I push or pull, use the remote named "s3".
+
+Without this setting, DVC may not know which remote to use.
+
+**What does dvc push do?**
+When you run:
+
+dvc push
+
+DVC uploads the tracked dataset into SeaweedFS.
+
+Conceptually:
+
+transactions.csv ↓ DVC Cache ↓ SeaweedFS Bucket
+
