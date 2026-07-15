@@ -44,13 +44,42 @@ stages:
     deps:
       - data/processed/train.csv
       - src/models/train.py
+
+    outs:
+      - models/model.pkl
+
+```
+Updated: dvc.yml
+```yaml
+stages:
+  process_data:
+    cmd: python src/data/process_data.py
+    deps:
+      - data/raw/transactions.csv
+      - src/data/process_data.py
+    outs:
+      - data/processed/clean_transactions.csv
+
+  split_data:
+    cmd: python src/data/split_data.py
+    deps:
+      - data/processed/clean_transactions.csv
+      - src/data/split_data.py
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+
+  train:
+    cmd: python src/models/train.py
+    deps:
+      - data/processed/train.csv
+      - src/models/train.py
     params:
       - n_estimators
     outs:
       - models/model.pkl
 
 ```
-
 Original (params.yaml)
 
 ```yaml
@@ -62,7 +91,7 @@ Updated (params.yaml)
 
 - n_estimator -> n_estimators
 - 100 -> 200
-
+Change the parameter in params.yaml
 ```yaml
 n_estimators: 200
 
@@ -83,30 +112,19 @@ dvc repro
 Output
 
 ```shell
-Running stage 'process_data':                                                       
-> python src/data/process_data.py
-Processed 15 rows
-Generating lock file 'dvc.lock'                                                     
-Updating lock file 'dvc.lock'
+Commit the current state so there is a baseline for comparison:
+git add dvc.yaml dvc.lock params.yaml models/model.pkl
+git commit -m "Track n_estimators as a DVC parameter"
 
-Running stage 'split_data':                                                         
-> python src/data/split_data.py
-Train: 12 rows, Test: 3 rows
-Updating lock file 'dvc.lock'                                                       
+Reproduce the pipeline again:
+dvc repro
 
-Running stage 'train':                                                              
-> python src/models/train.py
-Trained RandomForestClassifier with n_estimators=200
-Updating lock file 'dvc.lock'                                                       
+Commit the updated experiment:
+git add params.yaml dvc.lock models/model.pkl
+git commit -m "Increase n_estimators to 200"
 
-To track the changes with git, run:
-
-        git add models/.gitignore data/processed/.gitignore dvc.lock
-
-To enable auto staging, run:
-
-        dvc config core.autostage true
-Use `dvc push` to send your updates to remote storage.
+Show the tracked parameter differences between commits:
+dvc params diff
 ```
 # 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
 
