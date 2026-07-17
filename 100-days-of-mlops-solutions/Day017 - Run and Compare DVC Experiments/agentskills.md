@@ -1,0 +1,10 @@
+Agent Skills:
+1. https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md
+2. https://github.com/hashicorp/agent-skills/tree/main/terraform
+3. https://github.com/LukasNiessen/kubernetes-skill
+4. https://github.com/aws-samples/sample-agent-skills-for-builders/tree/main/skills
+5. https://github.com/MicrosoftDocs/Agent-Skills/tree/main/skills
+6. https://github.com/cloudflare/skills/tree/main/skills
+7. https://github.com/stripe/ai
+8. https://github.com/anthropics/skills
+9. https://github.com/VoltAgent/awesome-agent-skills

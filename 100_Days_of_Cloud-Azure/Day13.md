@@ -96,3 +96,13 @@ Check if you are able to SSH to the `datacenter-vm` vm as `root` user. From the 
 ssh root@<PUBLIC_IP>
 ```
 ![verify ssh](assets/day13_07.png)
+
+### **Step 9: If following Error poped**
+ ssh root@ip
+Please login as the user "azureuser" rather than the user "root".
+
+Connection to IP closed.
+
+**Soultion**
+* Find path and Location: sudo grep -R "Please login as the user" /etc /usr 2>/dev/null
+* Remove the line and save : sudo cat /root/.ssh/authorized_keys

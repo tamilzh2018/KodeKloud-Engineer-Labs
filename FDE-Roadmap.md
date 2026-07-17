@@ -1,5 +1,5 @@
 If you're targeting a **Forward Deployment Engineer (FDE)** role (such as at companies like Palantir, OpenAI, Scale AI, or Anduril Industries), you need a blend of:
-
+FDE = UI designer + Product owner + BA + solution architect + Lead Engineer + Developer + QA  + Devops + Support.
 * Software engineering
 * Cloud & DevOps
 * AI/LLM integration
