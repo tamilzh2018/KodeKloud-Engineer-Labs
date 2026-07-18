@@ -44,3 +44,12 @@ In the Change stop protection dialog:
 ### **Step 7: Verify Success Message**
 After saving, you should see a success message:
 - **Success banner:** "Successfully updated stop protection for instance i-xxxxxxxxxxxxxxxxx"
+
+### **To enable stop protection**
+aws ec2 modify-instance-attribute \
+    --instance-id i-1234567890abcdef0 \
+    --disable-api-stop '{"Value":true}'
+### **Verify if stop protection is enabled**
+aws ec2 describe-instance-attribute \
+    --instance-id i-1234567890abcdef0 \
+    --attribute disableApiStop

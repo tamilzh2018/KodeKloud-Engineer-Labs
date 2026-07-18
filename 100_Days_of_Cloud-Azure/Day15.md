@@ -98,3 +98,19 @@ Once both rules are created:
    - **Allow-HTTP** - Port 80, Priority 100, Allow
    - **Allow-SSH** - Port 22, Priority 110, Allow  
 ![verify rules](assets/day15_07.png)
+
+# Network Security Group Creation
+az network nsg create -g MyResourceGroup -n MyNsg --tags foo=bar
+# Rule Creation
+az network nsg rule create \
+    --resource-group kml_rg_main-4b2aa6f037dc495e \
+    --nsg-name devops-nsg \
+    --name Allow-SSH \
+    --priority 1010 \
+    --direction Inbound \
+    --access Allow \
+    --protocol Tcp \
+    --source-address-prefixes 0.0.0.0/0 \
+    --source-port-ranges '*' \
+    --destination-address-prefixes '*' \
+    --destination-port-ranges 22
