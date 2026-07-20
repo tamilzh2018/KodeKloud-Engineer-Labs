@@ -200,3 +200,60 @@ git tag v1.0
 Screenshot Verification
 
 ![Screenshot](<../screenshots/Screenshot Day 19.png>)
+
+# 🧠 Part 2: Simple Step-by-Step Explanation (Beginner Friendly)
+
+In this lab, the ingest and validate stages completed successfully, but the pipeline stopped during the preprocess stage.
+
+**When you ran:**
+
+dvc repro
+
+DVC executed the preprocess.py script successfully, and the script printed:
+
+Preprocessed: 20 clean rows
+
+However, DVC then displayed the following error:
+
+ERROR: failed to reproduce 'preprocess': output 'data/processed/cleaned.csv' does not exist
+
+This tells us that the Python script itself did not fail. Instead, DVC could not find the output file that was defined in dvc.yaml.
+
+**To investigate, we opened the pipeline configuration:**
+
+cat dvc.yaml
+
+Inside the preprocess stage, the output was configured as:
+
+outs:
+
+data/processed/cleaned.csv
+**Next, we checked the actual contents of the data/processed directory:**
+
+ls -l data/processed
+
+The output showed:
+
+clean.csv
+
+This revealed the problem: the script created clean.csv, but dvc.yaml expected cleaned.csv.
+
+Because DVC verifies that every declared output exists after a stage finishes, it stopped the pipeline when it couldn't find cleaned.csv.
+
+To fix the issue, we updated the outs section of the preprocess stage so that it matched the file actually produced by the script:
+
+preprocess: cmd: python3 scripts/preprocess.py deps: - data/raw/data.csv - scripts/preprocess.py outs: - data/processed/clean.csv
+
+**After saving the change, running:**
+
+dvc repro
+
+again allows DVC to locate the correct output file and continue executing the remaining stages of the pipeline.
+
+Key Takeaway
+
+A very common DVC error is:
+
+output '' does not exist
+
+When you see this message, the first thing to check is whether the output filename in dvc.yaml exactly matches the filename created by the script. Even a small difference—such as clean.csv versus cleaned.csv—is enough to cause the pipeline to fail. Always verify the actual output file (for example, using ls) before updating the pipeline configuration.
