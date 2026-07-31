@@ -123,4 +123,82 @@ This is where we connect the VM to our public VNet and ensure public IP assignme
 The VM creation will take 3-5 minutes. Monitor the deployment progress.
 Once complete, click **Go to resource** to view the VM details.
 
+
+CLI:
+Here are the Azure CLI commands to complete the setup:
+
+### 1. Set Variables
+
+```bash
+RESOURCE_GROUP="<your-resource-group-name>"
+LOCATION="eastus" # Adjust region if required
+VNET_NAME="xfusion-pub-vnet"
+SUBNET_NAME="xfusion-pub-subnet"
+VM_NAME="xfusion-pub-vm"
+ADMIN_USER="azureuser"
+
+```
+
+---
+
+### 2. Create the VNet and Subnet
+
+```bash
+az network vnet create \
+  --resource-group $RESOURCE_GROUP \
+  --name $VNET_NAME \
+  --location $LOCATION \
+  --address-prefixes 10.0.0.0/16 \
+  --subnet-name $SUBNET_NAME \
+  --subnet-prefixes 10.0.0.0/24
+
+```
+
+---
+
+### 3. Create the VM with Auto-Public IP and Port 22 Open
+
+```bash
+az vm create \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --image Ubuntu2204 \
+  --size Standard_B1s \
+  --storage-sku Standard_LRS \
+  --os-disk-size-gb 30 \
+  --vnet-name $VNET_NAME \
+  --subnet $SUBNET_NAME \
+  --public-ip-address-allocation static \
+  --admin-username $ADMIN_USER \
+  --generate-ssh-keys \
+  --public-ip-sku Standard \
+  --nsg-rule SSH
+
+```
+
+> **Note:** The `--public-ip-address-allocation dynamic` (or standard public IP auto-assignment) ensures the NIC receives a public IP, and `--nsg-rule SSH` automatically adds an inbound Network Security Group rule for port 22.
+
+---
+
+### 4. Verify Public IP and Connection
+
+Retrieve the assigned public IP address:
+
+```bash
+az vm list-ip-addresses \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --output table
+
+```
+
+Connect via SSH:
+
+```bash
+ssh $ADMIN_USER@<PUBLIC_IP_ADDRESS>
+
+```
+
+
+
 ![deployment complete](assets/day26_04.png)

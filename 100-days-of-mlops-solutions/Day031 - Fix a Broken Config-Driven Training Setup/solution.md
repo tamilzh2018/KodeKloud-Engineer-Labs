@@ -1,3 +1,23 @@
+# Task Question
+The xFusionCorp Industries ML platform team maintains a configuration-driven training pipeline that allows for hyperparameter adjustments without the need to modify Python code. A training scaffold is located at /root/code/fraud-detection/, with the trainer already set up. However, the YAML configuration is currently in a broken state, preventing the pipeline from running successfully. Your objective is to rectify the configuration so that one successful training run is recorded on the MLflow tracking server, and the trained model is saved within the project tree.
+
+
+The MLflow tracking server is already running on port 5000. The MLflow UI button at the top of the lab can be opened to confirm—the dashboard loads with an empty fraud-detection experiment already in place.
+
+The project layout under /root/code/fraud-detection/:
+
+data/train.csv – A pre-generated 200-row synthetic binary classification dataset (columns: amount, hour, num_tx_past_day, is_fraud).
+src/models/train.py – The config-driven trainer. This file is correct and must not be modified.
+configs/train_config.yaml – The project's training configuration.
+models/ – Where the serialised model must land.
+Run the trainer once against the scaffold as-is—python src/models/train.py—to see how it currently fails.
+
+The end state must include:
+
+A successful training run printed to stdout.
+Exactly one new MLflow run in the fraud-detection experiment, with the estimator's hyperparameters logged as run parameters.
+A serialised model at /root/code/fraud-detection/models/model.pkl (absolute path, inside the project tree).
+
 # Solution
 
 A **config-driven training** setup keeps every knob — which estimator, its hyperparameters, the dataset path, the target column, where to save the model — in a YAML file, so the training script stays fixed and a run is changed by editing config alone (no Python edits, easy to diff and reproduce). Here `train.py` reads `train_config.yaml`, resolves the estimator name through a small **registry** of allowed classes, trains, logs the run to MLflow, and serialises the model. When the config disagrees with reality — an estimator name the registry doesn't know, a target column the CSV doesn't contain, or an output path outside the project — the run either fails fast or drops its artifact in the wrong place. This task repairs those three mismatches in the config.
