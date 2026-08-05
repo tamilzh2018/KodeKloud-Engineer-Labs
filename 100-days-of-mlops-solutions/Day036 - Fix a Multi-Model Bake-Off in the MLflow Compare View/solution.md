@@ -1,3 +1,22 @@
+# Task 
+The xFusionCorp Industries ML platform team is conducting a three-way bake-off among three candidates for fraud detection: RandomForest, GradientBoosting, and LogisticRegression. Each candidate's performance is recorded as an MLflow run in the bakeoff experiment. While three accurate trainer scripts are already implemented, the orchestrator located at /root/code/fraud-detection/src/models/bakeoff.py incorrectly identifies the winning model and generates an incomplete report. Your objective is to modify the orchestrator to ensure that the model with the highest F1 score is correctly designated as the winner and that the report clearly indicates which model family triumphed.
+
+
+The MLflow tracking server is already running on port 5000. The MLflow UI button at the top of the lab can be opened to confirm—the dashboard loads with an empty bakeoff experiment.
+
+The project layout under /root/code/fraud-detection/:
+
+data/train.csv – A 200-row synthetic binary-classification dataset (imbalanced roughly 70 / 30).
+src/models/train_rf.py, src/models/train_gb.py, src/models/train_lr.py – Three independent trainer scripts. Each one fits its named estimator with 3-fold stratified CV and logs one MLflow run tagged candidate=<model family> with the mean f1_score metric and its hyperparameters. These three files are correct and need no edits.
+src/models/bakeoff.py – The orchestrator. It queries the bakeoff experiment with mlflow.search_runs(...) and writes /root/code/fraud-detection/reports/winner.json. The corrections are confined to this file.
+Each candidate must be logged before the orchestrator can compare them—run the three trainer scripts to populate the bakeoff experiment, then run python src/models/bakeoff.py and inspect reports/winner.json against the runs in MLflow.
+
+The end state must include:
+
+Three runs exist in the bakeoff MLflow experiment, one per candidate, each with tags.candidate, the candidate's hyperparameters, and metrics.f1_score.
+A JSON file at /root/code/fraud-detection/reports/winner.json with exactly three keys: model_type (one of random_forest, gradient_boosting, logistic_regression), run_id, and f1_score.
+The model_type, run_id, and f1_score stored in winner.json correspond to the candidate with the highest f1_score in the bakeoff experiment.
+The MLflow Compare view—select all three runs in the experiment's run list and click Compare—is the fastest way to eyeball which candidate won and spot-check the report.
 # Solution
 
 A model **bake-off** trains several candidate models on the same problem and picks a winner by a shared metric. When each candidate is logged as its own MLflow run — tagged with its model family and carrying its `f1_score` — selection becomes a *query*: `mlflow.search_runs(...)` returns the runs as a table you can sort. The orchestrator's job is to sort by the metric in the **right direction** (descending, so the top row is the best F1 — an ascending sort would hand back the *worst* candidate) and to record **which family won** (its `tags.candidate`), so downstream tooling promotes the right model. This task fixes an orchestrator that sorts the wrong way and omits the winning family.

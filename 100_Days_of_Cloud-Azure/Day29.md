@@ -25,7 +25,7 @@ Sign in with the credentials provided.
 
 ### **Step 4: Configure Basic Settings**
 **Basics Tab:**
-
+az group list
 - **Resource Group:** Select existing resource group 
 - **Registry name:** `xfusionacr3932` 
 - **Location:** `(US) East US` 
@@ -40,6 +40,7 @@ Leave other options as default.
   - Location: `East US`
   - Pricing plan: `Basic`
 - Click **Create**
+az acr create -n name -g Rg --sku Basic --location eastus
 
 Wait for deployment to complete (1-2 minutes).
 

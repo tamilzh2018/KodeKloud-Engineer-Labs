@@ -1,3 +1,21 @@
+# Task 35
+The xFusionCorp Industries ML platform team is currently tuning hyperparameters for fraud detection using Optuna and reviewing the comprehensive search results in the MLflow Compare view. A draft tuner is available at /root/code/fraud-detection/src/models/tune.py. However, the current optimization process is functioning incorrectly, causing no trials to be recorded on the tracking server. Your objective is to modify the tuner so that all 20 trials are visible in MLflow, and ensure that the saved best configuration corresponds to the candidate with the highest F1 score.
+
+
+The MLflow tracking server is already running on port 5000. The MLflow UI button at the top of the lab can be opened to confirm—the dashboard loads with an empty hyperopt-tuning experiment.
+
+The project layout under /root/code/fraud-detection/:
+
+data/train.csv – A 200-row synthetic binary-classification dataset (imbalanced roughly 70 / 30).
+src/models/tune.py – The Optuna tuner scaffold. Fold iteration, metric averaging, Optuna study creation, and YAML persistence are already wired; corrections are required.
+configs/ – Where best_params.yaml is written after the search completes.
+Run the tuner once against the scaffold as-is—python src/models/tune.py—and check the hyperopt-tuning experiment to confirm no trials land on the tracking server.
+
+The end state must include:
+
+At least 20 runs exist in the hyperopt-tuning experiment on MLflow. Every run carries params.n_estimators, params.max_depth, and metrics.f1_score.
+A YAML file at /root/code/fraud-detection/configs/best_params.yaml with exactly two keys: n_estimators (integer in the range [50, 500]) and max_depth (integer in the range [3, 20]).
+The saved best_params corresponds to the highest-F1 trial in the search space.
 # Solution
 
 **Optuna** automates hyperparameter search: you write an `objective(trial)` that samples candidate values (`trial.suggest_int(...)`), evaluates them, and returns a score; a **study** then runs the objective many times and remembers the best. Two things make a study trustworthy and inspectable. First, the **direction** must match the metric — F1 is better when *higher*, so the study must `maximize` (a `minimize` study would hand back the *worst* trial as `best_params`). Second, logging **each trial as its own MLflow run** turns the search into something you can open in the Compare view and reason about, rather than a single opaque "best" number. This task fixes the direction and adds the per-trial MLflow logging.
