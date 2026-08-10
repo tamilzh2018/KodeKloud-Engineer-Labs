@@ -82,3 +82,59 @@ Once on the Web App overview page, verify:
 - **App Service plan:** `datacenter-learn-python`
 - **Verify the tags**  
 ![verify app](assets/day31_03.png)
+# CLI
+# Variables
+RG="xfusion-rg"
+LOCATION="southcentralus"
+SERVER="xfusion-server-27004"
+DB="xfusion-sqldb"
+ADMIN="xfusion-admin"
+PASSWORD="<STRONG_PASSWORD>"
+
+# Create resource group (if it doesn't already exist)
+az group create \
+  --name $RG \
+  --location $LOCATION
+
+# Create SQL server
+az sql server create \
+  --name $SERVER \
+  --resource-group $RG \
+  --location $LOCATION \
+  --admin-user $ADMIN \
+  --admin-password "$PASSWORD"
+
+# Allow public access (Azure services + all IPs)
+az sql server firewall-rule create \
+  --resource-group $RG \
+  --server $SERVER \
+  --name AllowAll \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 255.255.255.255
+
+# Create the SQL database
+az sql db create \
+  --resource-group $RG \
+  --server $SERVER \
+  --name $DB \
+  --edition Basic \
+  --max-size 2GB \
+  --backup-storage-redundancy Local
+
+# Wait until the database is Ready
+while true; do
+  STATUS=$(az sql db show \
+    --resource-group $RG \
+    --server $SERVER \
+    --name $DB \
+    --query status -o tsv)
+
+  echo "Status: $STATUS"
+
+  if [ "$STATUS" = "Online" ]; then
+    echo "Database is Ready."
+    break
+  fi
+
+  sleep 15
+done

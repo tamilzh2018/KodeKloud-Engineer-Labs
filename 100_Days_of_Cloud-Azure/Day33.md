@@ -168,3 +168,114 @@ Go back to the Load Balancer:
 
 ### **Step 15: Test Load Balancer via Browser**
 Open a web browser and you should see the default nginx page.
+
+# CLI
+# Get Rg
+az group list
+az vm list -g MyResourceGroup -d
+# Set these if you know them; otherwise discover them below.
+RG="<RESOURCE_GROUP>"
+VM="<NGINX_VM_NAME>"
+
+# Discover the VM's NIC
+NIC_ID=$(az vm show -g "$RG" -n "$VM" \
+  --query "networkProfile.networkInterfaces[0].id" -o tsv)
+
+NIC_NAME=$(basename "$NIC_ID")
+
+# Discover the existing NSG attached to the NIC
+NSG_ID=$(az network nic show -g "$RG" -n "$NIC_NAME" \
+  --query "networkSecurityGroup.id" -o tsv)
+
+NSG_NAME=$(basename "$NSG_ID")
+
+# Create the public IP
+az network public-ip create \
+  --resource-group "$RG" \
+  --name devops-lb-ip \
+  --sku Standard \
+  --allocation-method Static
+
+# Create the public Load Balancer, frontend configuration,
+# and backend pool
+az network lb create \
+  --resource-group "$RG" \
+  --name devops-lb \
+  --sku Standard \
+  --public-ip-address devops-lb-ip \
+  --frontend-ip-name devops-lb-ip \
+  --backend-pool-name devops-backend-pool
+
+# Add the VM's NIC/IP configuration to the backend pool
+IPCONFIG_NAME=$(az network nic show -g "$RG" -n "$NIC_NAME" \
+  --query "ipConfigurations[0].name" -o tsv)
+
+az network nic ip-config address-pool add \
+  --resource-group "$RG" \
+  --nic-name "$NIC_NAME" \
+  --ip-config-name "$IPCONFIG_NAME" \
+  --lb-name devops-lb \
+  --address-pool devops-backend-pool
+
+# Create HTTP health probe on port 80
+az network lb probe create \
+  --resource-group "$RG" \
+  --lb-name devops-lb \
+  --name devops-health-probe \
+  --protocol Http \
+  --port 80 \
+  --path /
+
+# Create HTTP load-balancing rule: frontend 80 -> backend 80
+az network lb rule create \
+  --resource-group "$RG" \
+  --lb-name devops-lb \
+  --name devops-lb-rule \
+  --protocol Tcp \
+  --frontend-port 80 \
+  --backend-port 80 \
+  --frontend-ip-name devops-lb-ip \
+  --backend-pool-name devops-backend-pool \
+  --probe-name devops-health-probe
+
+# Allow HTTP/80 through the VM's EXISTING NSG
+az network nsg rule create \
+  --resource-group "$RG" \
+  --nsg-name "$NSG_NAME" \
+  --name Allow-HTTP-80 \
+  --protocol Tcp \
+  --direction Inbound \
+  --source-address-prefixes Internet \
+  --source-port-ranges '*' \
+  --destination-address-prefixes '*' \
+  --destination-port-ranges 80 \
+  --access Allow \
+  --priority 100
+
+# Verify
+az network lb show \
+  --resource-group "$RG" \
+  --name devops-lb \
+  --query "{name:name,frontend:frontendIpConfigurations[0].name,backend:backendAddressPools[0].name}"
+
+az network lb probe show \
+  --resource-group "$RG" \
+  --lb-name devops-lb \
+  --name devops-health-probe
+
+az network lb rule show \
+  --resource-group "$RG" \
+  --lb-name devops-lb \
+  --name devops-lb-rule
+
+az network lb address-pool show \
+  --resource-group "$RG" \
+  --lb-name devops-lb \
+  --name devops-backend-pool
+
+az network public-ip show \
+  --resource-group "$RG" \
+  --name devops-lb-ip \
+  --query ipAddress -o tsv
+
+Then browse to the returned public IP with http://<PUBLIC_IP>. The Nginx sample page should be served through lb.
