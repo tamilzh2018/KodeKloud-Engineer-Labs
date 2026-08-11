@@ -81,3 +81,44 @@ Verify package installation works:
 # Install a small test package
 sudo apt install -y net-tools
 ```
+
+# CLI
+**Get Public IP**
+az group list
+az vm list -g MyResourceGroup
+az network public-ip list -g MyResourceGroup
+
+**Connect the VM**
+ssh -i /root/.ssh/id_rsa <username>@<VM_PUBLIC_IP>
+
+# Basic connectivity
+ip route
+cat /etc/resolv.conf
+getent hosts archive.ubuntu.com || getent hosts packages.microsoft.com
+
+# Test HTTPS package-repository connectivity
+curl -I --connect-timeout 5 https://archive.ubuntu.com
+curl -I --connect-timeout 5 https://packages.microsoft.com
+
+# Identify the package-manager error
+sudo apt-get update
+
+**The key things I'm looking for are: to know the VM has a public IP and its NIC is attached to datacenter-nsg**
+
+DNS failure → incorrect DNS configuration.
+No default route → routing/UDR problem.
+HTTPS timeout/refusal while other connectivity works → likely an NSG outbound rule blocking TCP/443.
+apt-get update reaching the repository but failing with proxy errors → proxy configuration.
+NSG appears permissive but no Internet access → check whether the subnet/NIC has a public/NAT path and whether a route table is forcing traffic elsewhere.
+
+# Check NSG's outbound rules any deny rule set and the subnet's route table
+az network nsg rule list \
+  -g MyResourceGroup \
+  --nsg-name datacenter-nsg \
+  --query "[].{name:name,direction:direction,access:access,priority:priority,protocol:protocol,src:sourceAddressPrefix,dst:destinationAddressPrefix,dstPort:destinationPortRange}" \
+  -o table
+**Delete deny rules**
+az network nsg rule delete \
+  -g MyResourceGroup  \
+  --nsg-name datacenter-nsg \
+  -n Block-All-Outbound
