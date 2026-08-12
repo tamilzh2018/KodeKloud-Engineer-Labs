@@ -109,3 +109,104 @@ ping -c 4 <private-vm-private-ip> # e.g., 10.1.1.4
 ![ping test success](assets/day35_05.png)
 
 **Expected result:** You should receive successful ping responses from the private VM.
+# CLI
+You can do this with Azure CLI. Since the public VNet's name and the private VM's IP aren't provided, first discover them.
+
+### 1. Identify the VNets and private VM IP
+
+```bash
+# List VNets
+az network vnet list -o table
+
+# Find the private VM's NIC/IP
+az vm list-ip-addresses -o table
+```
+# Find the Resource Group
+az group list -o table
+
+Set variables from the output:
+
+```bash
+PUBLIC_VNET="<public-vnet-name>"
+PUBLIC_RG="<public-vnet-resource-group>"
+PRIVATE_VNET="nautilus-priv-vnet"
+PRIVATE_RG="<private-vnet-resource-group>"
+PRIVATE_IP="<private-vm-private-ip>"
+```
+
+### 2. Create the VNet peering
+
+Azure VNet peering is directional, so create a peering in **both directions**.
+
+From the public VNet to the private VNet:
+
+```bash
+az network vnet peering create \
+  --name nautilus-pub-to-priv-peering \
+  --resource-group "$PUBLIC_RG" \
+  --vnet-name "$PUBLIC_VNET" \
+  --remote-vnet "$PRIVATE_VNET" \
+  --allow-vnet-access
+```
+
+Create the return-direction peering:
+
+```bash
+az network vnet peering create \
+  --name nautilus-priv-to-pub-peering \
+  --resource-group "$PRIVATE_RG" \
+  --vnet-name "$PRIVATE_VNET" \
+  --remote-vnet "$PUBLIC_VNET" \
+  --allow-vnet-access
+```
+
+Verify both peerings:
+
+```bash
+az network vnet peering list \
+  --resource-group "$PUBLIC_RG" \
+  --vnet-name "$PUBLIC_VNET" \
+  -o table
+
+az network vnet peering list \
+  --resource-group "$PRIVATE_RG" \
+  --vnet-name "$PRIVATE_VNET" \
+  -o table
+```
+
+Both should eventually show **PeeringState: Connected**.
+
+### 3. SSH to the public VM
+
+If `nautilus-pub-vm` has a public IP:
+
+```bash
+az vm list-ip-addresses \
+  --name nautilus-pub-vm \
+  --query "[].virtualMachine.network.publicIpAddresses[].ipAddress" \
+  -o tsv
+```
+
+Then:
+
+```bash
+ssh <username>@<public-vm-public-ip>
+```
+
+### 4. Test connectivity to the private VM
+
+From the SSH session on `nautilus-pub-vm`:
+
+```bash
+ping -c 4 <PRIVATE_IP>
+```
+
+For example:
+
+```bash
+ping -c 4 10.1.1.4
+```
+
+If ICMP is permitted by the private VM's NSG and operating-system firewall, you should see replies from the private VM.
+
+If `ping` fails but the peering state is **Connected**, check the private subnet/VM's **Network Security Group** and the VM's OS firewall, since VNet peering itself does not automatically permit ICMP through those security controls.
