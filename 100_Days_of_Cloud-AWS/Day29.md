@@ -152,7 +152,15 @@ cat /root/.ssh/id_rsa.pub
 - Test if you are able to ping the private instance from public instance
   - `ping <PRIV_EC2_PRIV_IP>`
 
-
+PUB_EC2_PUB_IP=$(aws ec2 describe-instances \
+  --instance-ids "$PUB_EC2_ID" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' \
+  --output text)
+  
+PRIV_EC2_PRIV_IP=$(aws ec2 describe-instances \
+  --instance-ids "$PRIV_EC2_ID" \
+  --query 'Reservations[0].Instances[0].PrivateIpAddress' \
+  --output text )
 ### Step 8: Verfication (Optional)
 From AWS client host
 ```bash
