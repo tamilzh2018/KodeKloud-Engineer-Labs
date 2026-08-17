@@ -63,3 +63,56 @@ az storage blob upload \
 
 ### **Step 7: Test Website Access via Browser**
 Open a web browser and navigate to the primary endpoint URL copied in Step 4
+
+# CLI
+
+# 1. Variables
+RG="<RESOURCE_GROUP>"
+SA="nautiluswebst8886"
+
+# Optional: verify the storage-account name is available
+az storage account check-name --name "$SA" --query nameAvailable -o tsv
+
+# 2. Create the Storage account
+az storage account create \
+  --name "$SA" \
+  --resource-group "$RG" \
+  --location "$(az group show -n "$RG" --query location -o tsv)" \
+  --sku Standard_LRS \
+  --kind StorageV2 \
+  --allow-blob-public-access true
+
+# 3. Enable static website hosting and set index.html
+az storage blob service-properties update \
+  --account-name "$SA" \
+  --subscription "$SUBSCRIPTION_ID" \
+  --static-website true \
+  --index-document index.html
+
+# 4. Upload /root/index.html to the $web container
+az storage blob upload \
+  --account-name "$SA" \
+  --container-name '$web' \
+  --name index.html \
+  --file /root/index.html \
+  --content-type 'text/html; charset=utf-8' \
+  --overwrite
+
+# 5. Verify static website configuration
+az storage blob service-properties show \
+  --account-name "$SA" \
+  --query "{enabled:staticWebsite.enabled,index:staticWebsite.indexDocument}" \
+  -o json
+
+# 6. Get the public static-website URL
+URL=$(az storage account show \
+  --name "$SA" \
+  --resource-group "$RG" \
+  --query "primaryEndpoints.web" \
+  -o tsv)
+
+echo "$URL"
+
+# 7. Verify that the site responds publicly
+curl -I "$URL"
+curl -fsS "$URL"
