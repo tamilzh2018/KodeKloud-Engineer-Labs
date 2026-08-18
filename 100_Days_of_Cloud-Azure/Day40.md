@@ -32,8 +32,9 @@ Define variables for easier management:
 ```bash
 RESOURCE_GROUP=$(az group list --query "[0].name" -o tsv)
 USER_NAME=$(az account show --query user.name -o tsv)
-KEY_VAULT="datacenter-22709"
+KEY_VAULT="datacenter-30525"
 KEY_NAME="datacenter-key"
+LOCATION="eastus"
 ```
 
 ### **Step 3: Create the Key Vault**
@@ -41,17 +42,18 @@ KEY_NAME="datacenter-key"
 az keyvault create \
   --name $KEY_VAULT \
   --resource-group $RESOURCE_GROUP \
-  --location "East US" \
+  --location $LOCATION \
   --retention-days 7 \
+  --sku standard \
   --enable-rbac-authorization false
 ```
 
 ### **Step 4: Set Access Policies**
 ```bash
 az keyvault set-policy \
-  --name $KEY_VAULT \
-  --upn $USER_NAME \
-  --key-permissions all
+  --name "$KEY_VAULT" \
+  --spn "$USER_NAME" \
+  --key-permissions get list create encrypt decrypt
 ```
 
 ### **Step 5: Create Key**
@@ -60,7 +62,7 @@ az keyvault key create \
   --vault-name $KEY_VAULT \
   --name $KEY_NAME \
   --kty RSA \
-  --size 2048
+  --size 4096
 ```
 
 ### **Step 6: Encrypt and save file**
