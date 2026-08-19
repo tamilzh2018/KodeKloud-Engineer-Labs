@@ -1,3 +1,22 @@
+# Task
+The xFusionCorp Industries ML platform team has created a Docker image for the fraud-detection training environment, allowing every engineer to achieve consistent results by executing the command docker run ml-trainer:v1. A scaffold for the Dockerfile is located at /root/code/ml-docker/, with its construction outlined as numbered TODOs. Your objective is to complete the Dockerfile in accordance with the team's standards, ensuring that the command docker build -t ml-trainer:v1 . executes successfully and that every Python import required by the training code is correctly resolved within the image.
+
+
+The Docker daemon is already running. docker version can be run in a VS Code terminal to confirm.
+
+The project layout under /root/code/ml-docker/:
+
+train.py – 10-row synthetic fraud-detection training stub; fits a RandomForest, prints accuracy + F1, and persists the model to /app/model.pkl with joblib.dump(...). Correct and must remain intact.
+Dockerfile – The image definition, scaffolded as five numbered TODOs (base image, working directory, dependency install, copy, command). Author each to the team standard.
+The end state must include:
+
+The base image is python:3.11-slim.
+WORKDIR /app is set.
+The pip install line installs every package the training code imports (scikit-learn, pandas, numpy, joblib).
+docker images ml-trainer:v1 lists the built image.
+docker run --rm ml-trainer:v1 python3 -c "import sklearn, pandas, numpy, joblib; print('OK')" prints OK.
+docker build . can be run repeatedly as each instruction lands; Docker re-uses cached layers so only the changed line re-runs. train.py is complete and must stay intact — only the Dockerfile is authored.
+
 # Solution
 
 A model that trains on one engineer's laptop is worthless if a teammate can't reproduce the run. A **Docker image** fixes the environment — the Python version, the libraries, the code — so the training job runs identically on any host. This task authors a `Dockerfile` from scratch to package an ML training environment: a base image, a working directory, the dependency install, the code copy, and the default command. The two ML-specific decisions are the base-image choice (`slim`, not `alpine`, because scikit-learn ships no musl wheel) and installing the full import closure — including the runtime-only `joblib` the trainer uses to persist the model.
@@ -36,6 +55,8 @@ Save the file.
 
 ##### 3. Build the image.
 ```
+docker login 
+
 docker build -t ml-trainer:v1 .
 ```
 The build runs each instruction in turn and completes once all four wheels install.
