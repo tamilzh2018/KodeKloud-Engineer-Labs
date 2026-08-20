@@ -1,3 +1,24 @@
+
+# Task
+The xFusionCorp Industries ML platform team has deployed a fraud-detection model as a Docker image. However, the current runtime image includes all packages required for the training phase and the training source itself, resulting in an unnecessarily large image. Your objective is to refactor the single-stage Dockerfile located at /root/code/ml-serve/ into a multi-stage build. This should comprise a builder stage that trains the model and generates model.pkl, followed by a runtime stage that installs only the dependencies necessary for serving and copies the trained model from the builder stage.
+
+
+The Docker daemon is already running. docker version can be run in a VS Code terminal to confirm.
+
+The project layout under /root/code/ml-serve/:
+
+train_model.py – Fits a 10-tree RandomForest on the shared 10-row synthetic fraud set and writes /app/model.pkl via joblib.dump(...). Correct and must remain intact.
+serve.py – Flask app loading the model and exposing POST /predict + GET /health on port 8080. Correct and must remain intact.
+Dockerfile – A single-stage build that installs scikit-learn, pandas, numpy, joblib, and flask, runs the trainer at build time to bake the model in, and serves. The reader rewrites this file.
+The end state must include:
+
+The Dockerfile carries at least two FROM instructions; the first is given a name (e.g. AS builder) so a later stage can reference it.
+The builder stage produces /app/model.pkl (the trained model).
+The runtime stage contains /app/model.pkl (copied out of the builder stage) and serve.py.
+The runtime stage's pip install line installs only the four packages serve.py needs: flask, joblib, numpy, scikit-learn.
+docker images ml-serve:v1 lists the built image; docker run --rm -p 8090:8080 ml-serve:v1 exposes /health returning {"status": "ok"} on port 8090.
+Multi-stage builds let you ship runtime images that carry only what the serving app needs — training dependencies and source files stay in the builder stage and are discarded. docker build -t ml-serve:v1 . can be re-run as each change lands; Docker re-uses cached layers when only runtime-stage lines change.
+
 # Solution
 
 A serving image should carry only what it needs to answer requests — not the training code, not the training-only dependencies. A **multi-stage build** splits the `Dockerfile` into a **builder** stage that trains the model and produces `model.pkl`, and a slim **runtime** stage that installs only the serving dependencies and copies the artifact out with `COPY --from=builder`. This task converts a working single-stage image into that two-stage form. The real reasoning is which dependency belongs where: `pandas` is used only by the trainer (builder-only), while `scikit-learn` is still needed at runtime to unpickle the model — so the runtime stage installs `flask`, `joblib`, `numpy`, `scikit-learn`, and the training source never ships.
