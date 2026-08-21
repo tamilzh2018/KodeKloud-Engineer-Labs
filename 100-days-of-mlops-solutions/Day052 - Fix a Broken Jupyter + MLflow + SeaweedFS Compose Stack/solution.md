@@ -1,3 +1,25 @@
+# Task
+The xFusionCorp Industries ML platform team has provided a local development stack comprised of Jupyter Lab for notebooks, MLflow for experiment tracking, and SeaweedFS for S3-compatible artifact storage, all encapsulated within a three-service docker compose deployment. A docker-compose.yml file is available at /root/code/ml-dev/, but it is currently misconfigured, resulting in the stack not making all three browser UIs accessible on their standard ports.
+
+Your objective is to correct the docker-compose.yml configuration so that each service is accessible on its appropriate standard port without requiring login prompts.
+
+
+The Docker daemon is already running and every image has been pre-pulled in the background at startup, so bringing the stack up returns in seconds on the first run. Run docker compose -f /root/code/ml-dev/docker-compose.yml up -d then docker compose -f /root/code/ml-dev/docker-compose.yml ps to see which UIs are reachable on their standard ports.
+
+The project layout under /root/code/ml-dev/:
+
+docker-compose.yml – Three services:
+jupyter – Container ml-jupyter, host port 8888.
+mlflow – Container ml-mlflow, host port 5000.
+seaweedfs – Container ml-seaweedfs. SeaweedFS serves the S3 API on container port 8333 and the Filer UI on container port 8888. The lab's convention is host port 9000 for the S3 API and host port 9001 for the Filer UI.
+The end state must include:
+
+All three containers (ml-jupyter, ml-mlflow, ml-seaweedfs) reported Up by docker compose ps.
+curl http://localhost:8888/ returns 200 or 302 – The Jupyter UI answers without prompting for a token.
+curl http://localhost:5000/ returns 200 – The MLflow UI answers on the standard port.
+curl http://localhost:9001/ returns 200 or 302 – The SeaweedFS Filer UI answers on its standard host port (the SeaweedFS S3 API stays on host 9000).
+The three browser UIs (Jupyter, MLflow, SeaweedFS Filer) are the primary verification surface — open them from the buttons at the top of the lab.
+
 # Solution
 
 A local ML dev stack is rarely one container — here it's three: **Jupyter** for notebooks, **MLflow** for tracking, and **SeaweedFS** as S3-compatible artifact storage, wired together with Docker **Compose**. The stack ships with two deliberate misconfigurations that leave the containers running but the UIs unreachable, and this task has you diagnose and fix them: a **`ports` mapping** entered in the wrong `host:container` order (so the SeaweedFS Filer UI isn't on its expected port), and a **missing `command:` override** (so Jupyter starts behind a generated auth token). Both are "it's up but it doesn't work" bugs — the kind Compose config drift produces in real life.
