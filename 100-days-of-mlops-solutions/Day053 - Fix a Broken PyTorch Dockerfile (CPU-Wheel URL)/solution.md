@@ -1,3 +1,17 @@
+# Task
+The xFusionCorp Industries ML platform team has provided the PyTorch deep-learning images under the tag dl-trainer:v1. Each lab host is equipped with CPU-only capabilities, necessitating that the Dockerfile targets the CPU wheel index and that the container's default command operates effectively on hardware without a GPU. The current draft of the Dockerfile, located at /root/code/dl-docker/, does not fulfill these specifications; attempts to execute docker build are unsuccessful, and once an image is generated, the container fails to run upon startup. Your objective is to revise the Dockerfile to ensure that the command docker build -t dl-trainer:v1 . executes successfully and that the command docker run --rm dl-trainer:v1 outputs the installed torch version alongside the message cuda? False.
+
+
+The Docker daemon is already running. docker version can be run in a VS Code terminal to confirm. The lab host does not expose a GPU—nvidia-smi returns command not found and torch.cuda.is_available() returns False inside any CPU-only container. Run docker build -t dl-trainer:v1 . in /root/code/dl-docker/ to see the build fail against the draft.
+
+The project layout under /root/code/dl-docker/:
+
+Dockerfile – A FROM, a WORKDIR, a RUN pip install line targeting torch, and a CMD that probes torch.cuda.
+The end state must include:
+
+docker images dl-trainer:v1 lists the built image.
+docker run --rm dl-trainer:v1 exits 0 and prints the installed torch version alongside the CUDA flag (e.g. 2.5.0+cpu cuda? False).
+
 # Solution
 
 PyTorch ships different wheels for different hardware, and installing the wrong one is a classic Docker failure. This task fixes a broken PyTorch `Dockerfile` so it builds and runs on a **CPU-only** host — the reality for most CI runners and many training boxes. Two bugs: the `pip install` points at a non-existent `/whl/gpu` index (so the build fails to resolve `torch` at all), and the default `CMD` hard-asserts `torch.cuda.is_available()` (so even a successful build exits non-zero on a machine with no GPU). The fixes are to target the official CPU wheel index (`/whl/cpu`) and to replace the assertion with a diagnostic print.
