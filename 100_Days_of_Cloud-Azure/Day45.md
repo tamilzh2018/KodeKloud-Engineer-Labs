@@ -67,3 +67,113 @@ AKS cluster deployment typically takes 5-10 minutes. Monitor the deployment prog
 1. Click **Go to resource** to navigate to `nautilus-aks`
 2. Review the **Overview** page  
 ![aks overview](assets/day45_03.png)
+
+# CLI
+I can give you the exact Azure CLI procedure, but I don’t have an Azure subscription/portal connection available in this chat to actually create or modify the AKS cluster.
+
+The current AKS documentation confirms that Kubernetes 1.36 is GA and supported through June 2027; you should select a currently offered 1.36.x patch in Central US rather than hard-code an outdated patch. 
+M
+Microsoft Learn
+
+Recommended Azure CLI procedure
+
+First, identify the resource group you want to use:
+
+RG="devops-rg"
+LOCATION="centralus"
+CLUSTER="devops-aks"
+
+
+Create it if necessary:
+
+az group create \
+  --name "$RG" \
+  --location "$LOCATION"
+
+
+Check which 1.36 patches are currently available in Central US:
+
+az aks get-versions \
+  --location centralus \
+  --output table
+
+
+Choose one of the currently available 1.36.x versions from that output. AKS recommends using the latest available patch for a minor version. 
+M
+Microsoft Learn
+
+Then create the cluster as a private AKS cluster, with a single agentpool, D2s v3 nodes, autoscaling from 1–2 nodes, and no monitoring add-on:
+
+K8S_VERSION="<available-1.36.x>"
+
+az aks create \
+  --resource-group "$RG" \
+  --name "$CLUSTER" \
+  --location "$LOCATION" \
+  --kubernetes-version "$K8S_VERSION" \
+  --nodepool-name agentpool \
+  --node-vm-size Standard_D2s_v3 \
+  --node-count 1 \
+  --enable-cluster-autoscaler \
+  --min-count 1 \
+  --max-count 2 \
+  --enable-private-cluster \
+  --network-plugin azure \
+  --generate-ssh-keys
+
+
+az aks disable-addons \
+  --addons monitoring \
+  --resource-group "$RG" \
+  --name "$CLUSTER"
+
+
+
+Verification
+
+Run:
+
+az aks show \
+  --resource-group "$RG" \
+  --name "$CLUSTER" \
+  --query '{
+    name:name,
+    location:location,
+    kubernetesVersion:kubernetesVersion,
+    provisioningState:provisioningState,
+    privateCluster:apiServerAccessProfile.enablePrivateCluster,
+    monitoring:addonProfiles.omsagent.enabled,
+    prometheus:azureMonitorProfile.metrics.enabled
+  }' \
+  --output yaml
+
+
+
+Finally:
+
+az aks get-credentials \
+  --resource-group "$RG" \
+  --name "$CLUSTER" \
+  --overwrite-existing
+
+kubectl get nodes -o wide
+kubectl get pods -A
+
+
+You want to see:
+
+location: centralus
+Kubernetes: 1.36.x
+privateCluster: true
+provisioning state: Succeeded
+only agentpool (unless AKS requires another system pool configuration)
+VM size: Standard_D2s_v3
+autoscaler: enabled
+minimum: 1
+maximum: 2
+monitoring/Container Insights: disabled
+nodes: Ready
+system pods: healthy
+
+One important caveat: a private AKS cluster's API server is reachable only through its private endpoint/network path, so kubectl verification must be performed from a machine with appropriate network connectivity to the private cluster.
+
