@@ -1,3 +1,19 @@
+# Task:
+The xFusionCorp Industries ML platform team deploys Flask-based inference APIs as Docker images, incorporating Docker-native HEALTHCHECK instructions. This allows operators to easily verify the serving status of the process by running docker inspect --format='{{.State.Health.Status}}'. However, the draft Dockerfile located at /root/code/ml-health/ currently does not meet these standards; executing docker inspect --format='{{.State.Health.Status}}' ml-health-api returns unhealthy, and docker inspect --format '{{.Config.ExposedPorts}}' ml-health:v1 shows no exposed ports. Your task is to rectify the HEALTHCHECK target and include the missing EXPOSE declaration.
+
+
+The Docker daemon is already running. docker version can be run in a VS Code terminal to confirm. With the current image built and run as ml-health-api, docker inspect --format='{{.State.Health.Status}}' ml-health-api reports unhealthy and docker inspect --format '{{.Config.ExposedPorts}}' ml-health:v1 shows no exposed ports.
+
+The project layout under /root/code/ml-health/:
+
+app.py – Flask API serving GET /health (returns {"status": "ok"} / 200) and POST /predict (returns a rule-based fraud flag) on port 8085. Correct.
+Dockerfile – python:3.11-slim, installs flask, copies app.py, carries a HEALTHCHECK + CMD. The corrected image is built as ml-health:v1 and run as a container named ml-health-api with host port 8085 published.
+The end state must include:
+
+docker inspect --format '{{.Config.ExposedPorts}}' ml-health:v1 reports map[8085/tcp:{}].
+After docker run, docker inspect --format='{{.State.Health.Status}}' ml-health-api reads healthy within ~15 seconds.
+curl http://localhost:8085/health returns {"status": "ok"} with HTTP 200.
+HEALTHCHECK reruns its CMD every --interval seconds and flips the state to unhealthy after --retries consecutive failures. EXPOSE does not change networking (that is done by -p)—it writes image metadata so docker inspect and downstream orchestrators know which port the image intends to serve on.
 # Solution
 
 Operators and orchestrators need to know whether a serving container is actually answering requests, not just whether the process is alive. A Docker **`HEALTHCHECK`** gives them that — it reruns a probe on an interval and flips the container's state to `unhealthy` after enough consecutive failures, readable via `docker inspect`. This task fixes a broken inference-API `Dockerfile`: the `HEALTHCHECK` probes a path the Flask app doesn't serve (so the container reports `unhealthy`), and the `EXPOSE` declaration is missing. Note what `EXPOSE` does and doesn't do — it writes image metadata that documents the intended port (surfaced in `docker inspect` and to orchestrators); it does **not** publish the port, which is what `-p` does at `docker run`.
