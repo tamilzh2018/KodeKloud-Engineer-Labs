@@ -211,6 +211,15 @@ aws s3api put-bucket-notification-configuration \
   --bucket $PUBLIC_S3 \
   --notification-configuration file://notification.json
 ```
+Verify:
+aws s3api get-bucket-notification-configuration \
+  --bucket $PUBLIC_S3
+# Test with sample.zip
+ls -lh /root/sample.zip
+**Upload it to the public bucket:**
+aws s3 cp /root/sample.zip \
+  s3://$PUBLIC_S3/sample.zip
+
 
 ### Step 9: Verification
 Check private bucket, you should see the `sample.zip` file
