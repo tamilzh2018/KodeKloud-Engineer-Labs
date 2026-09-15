@@ -1,5 +1,5 @@
 ## Task: Integrating AWS SQS and SNS for Reliable Messaging
-The Nautilus DevOps team needs to implement priority queuing using Amazon SQS and SNS. The goal is to create a system where messages with different priorities are handled accordingly. You are required to use AWS CloudFormation to deploy the necessary resources in your AWS account. The CloudFormation template should be created on the AWS client host at `/root/datacenter-priority-stack.yml`, the stack name must be `datacenter-priority-stack` and it should create the following resources:
+The datacenter DevOps team needs to implement priority queuing using Amazon SQS and SNS. The goal is to create a system where messages with different priorities are handled accordingly. You are required to use AWS CloudFormation to deploy the necessary resources in your AWS account. The CloudFormation template should be created on the AWS client host at `/root/datacenter-priority-stack.yml`, the stack name must be `datacenter-priority-stack` and it should create the following resources:
 
 1. Two SQS queues named `datacenter-High-Priority-Queue` and `datacenter-Low-Priority-Queue`.
 2. An SNS topic named `datacenter-Priority-Queues-Topic`.
@@ -32,18 +32,18 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       VisibilityTimeout: 180
-      QueueName: nautilus-High-Priority-Queue
+      QueueName: datacenter-High-Priority-Queue
 
   SQSLowPriorityQueue:
     Type: AWS::SQS::Queue
     Properties:
       VisibilityTimeout: 180
-      QueueName: nautilus-Low-Priority-Queue
+      QueueName: datacenter-Low-Priority-Queue
 
   PriorityQueuesTopic:
     Type: AWS::SNS::Topic
     Properties: 
-      TopicName: nautilus-Priority-Queues-Topic 
+      TopicName: datacenter-Priority-Queues-Topic 
 
   SQSHighQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -121,7 +121,7 @@ Resources:
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: nautilus-priorities-queue-function
+      FunctionName: datacenter-priorities-queue-function
       Description: Priority queue function
       Runtime: python3.9
       Code:
@@ -194,3 +194,20 @@ aws cloudformation wait stack-create-complete \
   --stack-name datacenter-priority-stack    
 ```
 Test it by running the commands provided in the task description
+
+topicarn=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'datacenter-Priority-Queues-Topic')].TopicArn" --output text)
+
+aws sns publish --topic-arn $topicarn --message 'High Priority message 1' --message-attributes '{"priority" : { "DataType":"String", "StringValue":"high"}}'
+
+aws sns publish --topic-arn $topicarn --message 'High Priority message 2' --message-attributes '{"priority" : { "DataType":"String", "StringValue":"high"}}'
+
+aws sns publish --topic-arn $topicarn --message 'Low Priority message 1' --message-attributes '{"priority" : { "DataType":"String", "StringValue":"low"}}'
+
+aws sns publish --topic-arn $topicarn --message 'Low Priority message 2' --message-attributes '{"priority" : { "DataType":"String", "StringValue":"low"}}'
+
+# If anything goes wrong  to Delete the stack
+
+aws cloudformation delete-stack   --stack-name datacenter-priority-stack
+
+aws-client ~ ➜  aws cloudformation wait stack-delete-complete \
+  --stack-name datacenter-priority-stack
