@@ -1,6 +1,6 @@
 ## Task: Integrating AWS SQS and SNS for Reliable Messaging
-The Nautilus DevOps team needs to implement a Lambda function using a CloudFormation stack. Create a CloudFormation template named `/root/nautilus-lambda.yml` on the AWS client host and configure it to create the following components. The stack name must be `nautilus-lambda-app`.
-1. Create a Lambda function named `nautilus-lambda`.
+The xfusion DevOps team needs to implement a Lambda function using a CloudFormation stack. Create a CloudFormation template named `/root/xfusion-lambda.yml` on the AWS client host and configure it to create the following components. The stack name must be `xfusion-lambda-app`.
+1. Create a Lambda function named `xfusion-lambda`.
 2. Use the Runtime `Python`.
 3. The function should print the body `Welcome to KKE AWS Labs!`.
 4. Ensure the status code is `200`.
@@ -10,9 +10,9 @@ The Nautilus DevOps team needs to implement a Lambda function using a CloudForma
 
 ## Solution
 
-### Step 1: Create the `/root/nautilus-lambda.yml` file on AWS client host:
+### Step 1: Create the `/root/xfusion-lambda.yml` file on AWS client host:
 ```bash
-vi /root/nautilus-lambda.yml
+vi /root/xfusion-lambda.yml
 ```
 Add the following content
 ```yml
@@ -35,13 +35,14 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
-  NautilusLambdaFunction:
+  xfusionLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: nautilus-lambda
+      FunctionName: xfusion-lambda
       Runtime: python3.9
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      MemorySize: 128
       Timeout: 10
       Code:
         ZipFile: |
@@ -55,24 +56,29 @@ Resources:
 ### Step 2: Create the stack
 ```bash
 aws cloudformation create-stack \
-  --stack-name nautilus-lambda-app \
-  --template-body file:///root/nautilus-lambda.yml \
+  --stack-name xfusion-lambda-app \
+  --template-body file:///root/xfusion-lambda.yml \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait for it to be created
 ```bash
 aws cloudformation wait stack-create-complete \
-  --stack-name nautilus-lambda-app
+  --stack-name xfusion-lambda-app
 ```
 
 ### Step 3: Verification
 Invoke the function
 ```bash
 aws lambda invoke \
-  --function-name nautilus-lambda \
+  --function-name xfusion-lambda \
   response.json
 ```
 Check the output - expected output:
+aws lambda get-function-configuration \
+  --function-name xfusion-lambda
+
+cat response.json
+
 ```json
 {
   "statusCode": 200,
