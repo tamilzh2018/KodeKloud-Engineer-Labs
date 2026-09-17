@@ -1,19 +1,19 @@
 ## Task: Centralized Audit Logging with VPC Peering
-The Nautilus DevOps team needs to build a secure and scalable log aggregation setup within their AWS environment. The goal is to gather log files from an internal EC2 instance running in a private VPC, transfer them securely to another EC2 instance in a public VPC, and then push those logs to a secure S3 bucket.
+The xfusion DevOps team needs to build a secure and scalable log aggregation setup within their AWS environment. The goal is to gather log files from an internal EC2 instance running in a private VPC, transfer them securely to another EC2 instance in a public VPC, and then push those logs to a secure S3 bucket.
 
-1. A VPC named `nautilus-priv-vpc` already exists with a private subnet named `nautilus-priv-subnet`, a route table named `nautilus-priv-rt`, and an EC2 instance named `nautilus-priv-ec2` (using `ubuntu` image). This instance uses the SSH key pair `nautilus-key.pem` already available on the AWS client host at `/root/.ssh/`.
+1. A VPC named `xfusion-priv-vpc` already exists with a private subnet named `xfusion-priv-subnet`, a route table named `xfusion-priv-rt`, and an EC2 instance named `xfusion-priv-ec2` (using `ubuntu` image). This instance uses the SSH key pair `xfusion-key.pem` already available on the AWS client host at `/root/.ssh/`.
 2. Your task is to:
-    - Create a new VPC named `nautilus-pub-vpc`.
-    - Create a subnet named `nautilus-pub-subnet` and a route table named `nautilus-pub-rt` under this public VPC.
-    - Attach an internet gateway to `nautilus-pub-vpc` and configure the public route table to enable internet access.
-    - Launch an EC2 instance named `nautilus-pub-ec2` into the public subnet using the same key pair as the private instance.
-    - Create an IAM role named `nautilus-s3-role` with `PutObject` permission to an S3 bucket and attach it to the public EC2 instance.
-    - Create a new private S3 bucket named `nautilus-s3-logs-27334`.
-    - Configure a VPC Peering named `nautilus-vpc-peering` between the private and public VPCs.
-    - Modify both `nautilus-priv-rt` and `nautilus-pub-rt` to route each other's CIDR blocks through the peering connection.
+    - Create a new VPC named `xfusion-pub-vpc`.
+    - Create a subnet named `xfusion-pub-subnet` and a route table named `xfusion-pub-rt` under this public VPC.
+    - Attach an internet gateway to `xfusion-pub-vpc` and configure the public route table to enable internet access.
+    - Launch an EC2 instance named `xfusion-pub-ec2` into the public subnet using the same key pair as the private instance.
+    - Create an IAM role named `xfusion-s3-role` with `PutObject` permission to an S3 bucket and attach it to the public EC2 instance.
+    - Create a new private S3 bucket named `xfusion-s3-logs-27334`.
+    - Configure a VPC Peering named `xfusion-vpc-peering` between the private and public VPCs.
+    - Modify both `xfusion-priv-rt` and `xfusion-pub-rt` to route each other's CIDR blocks through the peering connection.
     - On the private instance, configure a cron job to push the `/var/log/boots.log` file to the public instance (using `scp` or `rsync`).
     - On the public instance, configure a cron job to push that same file to the created S3 bucket.
-    - The uploaded file must be stored in the S3 bucket under the path `nautilus-priv-vpc/boot/boots.log`.
+    - The uploaded file must be stored in the S3 bucket under the path `xfusion-priv-vpc/boot/boots.log`.
 
 ---
 
@@ -21,15 +21,15 @@ The Nautilus DevOps team needs to build a secure and scalable log aggregation se
 
 ### Step 1: Set Variables
 ```bash
-PRIV_VPC="nautilus-priv-vpc"
-PRIV_RT="nautilus-priv-rt"
-PUB_VPC="nautilus-pub-vpc"
-PUB_SUBNET="nautilus-pub-subnet"
-PUB_RT="nautilus-pub-rt"
-VPC_PEERING="nautilus-vpc-peering"
-PUB_EC2="nautilus-pub-ec2"
-PRIV_S3="nautilus-s3-logs-27334"
-S3_ROLE="nautilus-s3-role"
+PRIV_VPC="xfusion-priv-vpc"
+PRIV_RT="xfusion-priv-rt"
+PUB_VPC="xfusion-pub-vpc"
+PUB_SUBNET="xfusion-pub-subnet"
+PUB_RT="xfusion-pub-rt"
+VPC_PEERING="xfusion-vpc-peering"
+PUB_EC2="xfusion-pub-ec2"
+PRIV_S3="xfusion-s3-logs-27334"
+S3_ROLE="xfusion-s3-role"
 ```
 
 ### Step 2: Create network components
@@ -111,7 +111,7 @@ AMI_ID=$(aws ec2 describe-images \
 PUB_EC2_ID=$(aws ec2 run-instances \
   --image-id $AMI_ID \
   --instance-type t2.micro \
-  --key-name nautilus-key \
+  --key-name xfusion-key \
   --subnet-id $PUB_SUBNET_ID \
   --query "Instances[0].InstanceId" \
   --output text)
@@ -244,11 +244,58 @@ aws ec2 create-route \
 ### Step 8: Configure Cron job on public EC2 instance
 - Connect to public EC2 instance from the `aws-client` host 
 - Update the crontab to upload logs to S3 bucket
+
+
+ls -l /root/.ssh/xfusion-key.pem
+
+chmod 600 /root/.ssh/xfusion-key.pem
+
+PUB_IP=$(aws ec2 describe-instances \
+  --instance-ids "$PUB_EC2_ID" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' \
+  --output text)
+
+PUB_PRIVATE_IP=$(aws ec2 describe-instances \
+  --instance-ids "$PUB_EC2_ID" \
+  --query 'Reservations[0].Instances[0].PrivateIpAddress' \
+  --output text)
+
+echo "$PUB_IP"
+echo "$PUB_PRIVATE_IP"
+
+enable port 22 on Security Group of Public Ec2
+
+scp -i /root/.ssh/xfusion-key.pem \
+    /root/.ssh/xfusion-key.pem \
+    ubuntu@$PUB_IP:/home/ubuntu/
+
+ssh -i /root/.ssh/xfusion-key.pem ubuntu@$PUB_IP
+sudo apt install unzip
+curl -fsSL https://awscli.amazonaws.com/v2/install.sh | sudo bash -s -- --system
+
+scp -i /home/ubuntu/xfusion-key.pem \
+    /home/ubuntu/xfusion-key.pem \
+    ubuntu@$PRI_PRIVATE_IP:/home/ubuntu/
+
+
+ssh -i /home/ubuntu/xfusion-key.pem ubuntu@$PRI_PRIVATE_IP
+ls -l /home/ubuntu/xfusion-key.pem
+chmod 600 /home/ubuntu/xfusion-key.pem
+
+ssh -i /home/ubuntu/xfusion-key.pem ubuntu@$PUB_PRIVATE_IP
+
+
+Private instance cron tab
+sudo crontab -e
+
+* * * * * /usr/bin/scp -o StrictHostKeyChecking=no -i /home/ubuntu/xfusion-key.pem /var/log/boots.log ubuntu@10.20.1.89:/home/ubuntu/boots.log
+
+
 ```bash
 crontab -e
 ```
 ```bash
-* * * * * aws s3 cp /root/boots.log s3://nautilus-s3-logs-27334/nautilus-priv-vpc/boot/boots.log
+* * * * * aws s3 cp /root/boots.log s3://xfusion-s3-logs-27334/xfusion-priv-vpc/boot/boots.log
 ```
 - Ensure awscli is installed on the public EC2 instance
 
@@ -256,9 +303,13 @@ crontab -e
 - Connect to private EC2 instance from the public instance using private IP
 - Update crontab to upload logs to public instance 
 ```bash
-* * * * * scp -i /root/nautilus-key.pem /var/log/boots.log root@<pub_instance_private_IP>:/root/boots.log
+Public instance cron tab
+
+sudo crontab -e
+
+* * * * * /usr/local/bin/aws s3 cp /home/ubuntu/boots.log s3://xfusion-s3-logs-249083031/xfusion-priv-vpc/boot/boots.log
 ```
-- Ensure private instance has the ssh key(`nautilus-key.pem`) to connect to the public instance.
+- Ensure private instance has the ssh key(`xfusion-key.pem`) to connect to the public instance.
 
 ### Step 10: Verification
 Check if the log file is uploaded to the private S3 bucket 
