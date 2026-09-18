@@ -1,3 +1,31 @@
+# Task
+The xFusionCorp Industries ML platform team operates a fraud-detection model in production, supported by a comprehensive observability stack. This stack includes a Flask API with Prometheus instrumentation, Redis for per-IP rate limiting, nginx as the public reverse proxy, Prometheus for metrics collection, and Grafana for dashboarding. Currently, the pre-staged stack located at /root/code/serving/production/ does not reach a clean end state. Your objective is to correct the wiring, bring the stack online, and create a Grafana dashboard that visualizes the model API's request rate.
+
+
+The Docker daemon is already running. Every image the compose stack references is being pre-pulled in the background at startup, so docker compose up -d returns in seconds. The Grafana admin password is grafana2026.
+
+Bring the stack up and observe where it falls short: cd /root/code/serving/production && docker compose up -d && docker compose ps shows the container states, and docker compose logs surfaces the wiring faults behind any container that does not settle.
+
+The project layout under /root/code/serving/production/:
+
+app/app.py – Flask API with /health, /predict (Redis-backed per-IP rate limit), and /metrics (once the exporter is wired). Needs attention.
+app/Dockerfile – python:3.11-slim + flask + redis + prometheus-flask-exporter + joblib + sklearn. Correct.
+model.pkl – Trained at startup on the shared synthetic fraud dataset.
+docker-compose.yml – Defines model-api, redis, nginx (publishes 8085), prometheus (publishes 9090), grafana (publishes 3000, admin password grafana2026), and a traffic-generator sidecar (continuously POSTs to /predict so Grafana has live request-rate data to plot). Correct.
+prometheus.yml – Scrape config for the model-api job. Needs attention.
+nginx.conf – Reverse-proxy config with an upstream model_backend block + location / forwarding every request. Needs attention.
+grafana/provisioning/datasources/prometheus.yml – Pre-provisions a Prometheus datasource pointing at http://prometheus:9090, so the Grafana task focuses on dashboard creation.
+The Grafana UI button opens the console once the stack is up; the dashboard should carry at least one panel that queries the Prometheus datasource.
+
+The end state must include:
+
+All six containers (model-api, prod-redis, prod-nginx, prod-prometheus, prod-grafana, prod-traffic) are reported running by docker inspect.
+curl -s http://localhost:5000/metrics returns a Prometheus exposition-format body (HTTP 200).
+curl -X POST http://localhost:8085/predict -d '{...}' through nginx returns a JSON is_fraud response.
+curl http://localhost:9090/api/v1/targets reports the model-api job's health as up.
+curl -u admin:grafana2026 http://localhost:3000/api/datasources lists a Prometheus datasource.
+curl -u admin:grafana2026 http://localhost:3000/api/search?type=dash-db returns at least one user-created dashboard, and that dashboard's JSON carries at least one panel.
+The Flask app listens on container port 5000. The prometheus-flask-exporter publishes standard HTTP request counters that a Grafana panel can query to plot the API's request rate.
 # Solution
 
 A production serving stack is more than the model container: it sits behind a reverse proxy, is rate-limited, exports metrics, and is observable on a dashboard. This capstone brings up that full stack with `docker compose` — a Flask fraud API behind nginx, with Redis rate-limiting, Prometheus scraping, and Grafana — fixing the port-wiring bugs that stop it and building a Grafana panel for the request-rate metric.
