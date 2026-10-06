@@ -1,3 +1,33 @@
+# Task
+The xFusionCorp Industries ML platform team requires the enforcement of quality gates for the fraud-detection model in two key ways: first, by establishing an Evidently test suite that can be executed by any CI job against a production batch, and second, by integrating this suite with Grafana to ensure that on-call personnel are notified immediately if live accuracy declines. The monitoring stack is operational, and the test-suite scaffold is already established, including data loading, classification mapping, report execution, and publication to the Evidently UI.
+
+Your task consists of two parts: (1) Complete the TODO block of the scaffold with the two specified threshold metrics, execute the test suite, and examine the results in the Evidently UI; (2) Create a Grafana alert rule that triggers when avg_over_time(prediction_accuracy[1m]) falls below 0.80.
+
+
+Evidently test suite. /root/code/monitoring/tests/test_suite.py is pre-wired except for the gates themselves; a TODO block marks where two thresholded metrics must be appended to METRICS:
+
+a missing-values gate that fails the suite when the batch carries 10 or more missing values.
+
+an accuracy gate that fails the suite when batch accuracy is 0.80 or lower.
+
+The batch it runs against is /root/code/monitoring/tests/current.csv (features + is_fraud target + the model's prediction column). The batch carries only a few missing values and its accuracy clears 0.80, so both gates should end up SUCCESS. A successful run writes test_results.json and publishes a snapshot to the Evidently workspace, viewable under the Evidently UI button (port 8000) in the fraud-detector quality gates project (Reports tab).
+
+Grafana alert rule. The Grafana UI is running on port 3000. The Grafana button opens the login page. Admin credentials: admin / grafana2026. The Prometheus datasource is pre-provisioned. Metrics available:
+
+prediction_accuracy – The gauge for this task. It drifts in a random walk around 0.85, so avg_over_time(prediction_accuracy[1m]) is the smoothed signal the alert should watch.
+data_drift_score{column}, evidently_drift_share – Per-feature PSI and the drifted-columns share, computed by the Evidently drift scorer at /root/code/monitoring/drift/drift_scorer.py.
+flask_http_request_total{version, endpoint, method}, model_inference_duration_seconds – The other signals from the shared metric-emitter.
+The alert rule must fire when avg_over_time(prediction_accuracy[1m]) drops below 0.80.
+
+The end state must include:
+
+/root/code/monitoring/tests/test_results.json exists and carries at least two Evidently test entries—a missing-values gate and an accuracy gate—all with status SUCCESS.
+The Evidently UI's project carries at least one published run (snapshot).
+GET /api/v1/provisioning/alert-rules returns a non-empty array.
+At least one rule's PromQL expression references prediction_accuracy.
+That rule's threshold evaluator carries 0.80 as a numeric parameter.
+The same 0.80 accuracy gate is enforced at two altitudes: the Evidently test suite fails a CI pipeline before a degraded model ships, and the Grafana alert rule pages on-call after live accuracy slips. Evidently's include_tests=True turns each metric into a pass/fail assertion—the same structure a pytest run gives you, but over data and model quality—and the Evidently UI is where a reviewer reads those verdicts without touching code.
+
 # Solution
 
 A quality threshold is only useful if it is enforced. This task enforces one accuracy bar at **two altitudes**: an **Evidently** test suite that fails a pipeline before a degraded model ships, and a **Grafana alert rule** that pages on-call when live accuracy slips past the same bar. You complete the Evidently test-suite scaffold (thresholded metrics via the current `Report(..., include_tests=True)` API) and wire the matching Grafana alert.
