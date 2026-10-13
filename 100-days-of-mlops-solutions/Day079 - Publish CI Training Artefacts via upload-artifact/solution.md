@@ -1,3 +1,19 @@
+# Task
+The xFusionCorp Industries ML platform team's Continuous Integration (CI) system currently trains the model and generates a confusion matrix in PNG format. However, these artifacts are discarded when the runner tears down the workspace, preventing reviewers on a Pull Request (PR) from accessing them. A teammate has submitted a PR titled Publish Training Artifacts from CI in the fraud-detector repository. Your task is to integrate actions/upload-artifact into the existing report job, ensuring that metrics.json and confusion_matrix.png are available as a downloadable zip file on the run page.
+
+
+The Gitea UI is running on port 3000 (the Gitea button opens the login page). Admin credentials: gitea-admin / gitea2026. The repo lives at http://localhost:3000/gitea-admin/fraud-detector and a working clone is at /root/code/fraud-detector, already checked out on branch add-artifact-upload. The PR is pre-opened.
+
+The current report job in .gitea/workflows/ci.yml already installs numpy scikit-learn joblib matplotlib, runs python3 -m src.train (writes artifacts/model.joblib and artifacts/metrics.json), runs python3 -m src.plot (writes artifacts/confusion_matrix.png), and ends with ls -la artifacts/ — but the produced files are discarded when the run finishes. The job needs a final step that uploads the artifacts/ directory as a named artefact (model-report) using actions/upload-artifact. Use @v3 — Gitea's runner rejects @v4.
+
+The end state must include:
+
+The report job contains a step that uses actions/upload-artifact@* with a non-empty path and the artefact name model-report.
+The run-level artefact download at /gitea-admin/fraud-detector/actions/runs/<id>/artifacts/model-report returns a zip containing both metrics.json and confusion_matrix.png by basename.
+The PR head commit's combined status is success.
+Artefacts are CI's answer to the question 'what did that run actually produce?'. A green check-mark tells you the code compiled; an uploaded artefact tells you what shipped out the other end. For ML runs, this is where the metrics JSON, the confusion matrix plot, and the pickled model live before anyone promotes them to a registry.
+
+
 # Solution
 
 CI artefacts are the files a run produces and hands back for download after the workspace is torn down. In this task a `report` job already trains and renders a confusion matrix but throws the outputs away, so you wire in `actions/upload-artifact` to publish `metrics.json` and `confusion_matrix.png` as a named, downloadable artefact on the run page.
