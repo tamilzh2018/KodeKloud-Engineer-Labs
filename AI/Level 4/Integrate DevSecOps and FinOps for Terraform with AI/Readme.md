@@ -1,273 +1,401 @@
-Docker Stack Architect & Network Analyst
+# Terraform DevSecOps & FinOps Auditor
 
-The datacenter AI Engineering Division is expanding its research into AI-driven infrastructure automation. After experimenting with poetry, testing frameworks, and optimization workflows, the team now wants to evaluate how well AI can design infrastructure and reason about networking in a multi-stage pipeline.
+The datacenter Automation Research Group is pushing the boundaries of AI-driven infrastructure governance. After previous breakthroughs in autonomous CI/CD pipelines and Ansible playbook linting, the team is now exploring whether AI can perform DevSecOps and FinOps auditing on Infrastructure-as-Code — identifying vulnerabilities and cost inefficiencies, and even auto-fixing them.
 
-In this you will build a two-stage intelligent DevOps workflow inside docker_stack.py. The system will first act as a DevOps Architect generating a Docker Compose file, and then transform into a Network Analyst evaluating how the generated stack communicates internally. A app_spec.txt file has already been created for you.
+In this challenge, you will build a three-stage AI auditing system that performs both security and cost scanning on a Terraform configuration file (main.tf) and then intelligently rewrites it to ensure compliance and efficiency.
 
-Initialize Client: Create the OpenAI client (model: gpt-5.6-luna) using the api_key&base_url.
+Your goal is to automate what a human DevOps engineer and cloud architect might do during a production review — detect risky network configurations and costly compute resources, then apply the appropriate remediations.
 
-Function 1: generate_compose(spec_path: str, output_path: str) (The Architect)
+Your implementation will be in tf_auditor.py.
 
-Read the content of app_spec.txt present under /root/openaiproject.
+**Initialize Client:** Create the OpenAI client using (gpt-5.6-luna) api_key& base_url.
 
-Call the OpenAI API with a prompt: "You are a DevOps Architect. Based on this app spec, write a complete, valid docker-compose.yml file. The web service must depend on db and cache. Use environment variables for the Postgres password. Respond ONLY with the raw YAML, with no Markdown fences (```yaml)."
+**Function 1:** security_scan(tf_content: str) -> str
 
-Save the AI's YAML output to output_path ( docker-compose.yml) under /root/openaiproject.
+* Call OpenAI as a Security Linter. Identify issues such as open SSH ports (0.0.0.0/0) or missing encryption.
 
-Function 2: analyze_networking(compose_path: str) -> str (The Analyst)
+* Return a JSON list of issues.
 
-Read the entire content of the generated docker-compose.yml file.
+**Function 2:** cost_scan(tf_content: str) -> str
 
-Call the OpenAI API a second time using a different system prompt: "You are a network engineer. Read this Docker Compose file. In a single paragraph, explain how the web service can connect to the db service (mentioning service discovery names) and why the db port does not need to be exposed to the host machine."
+* Call OpenAI as a FinOps Analyst. Identify expensive resources (e.g., m5.2xlarge) and suggest cheaper, equivalent alternatives (like t3.micro).
 
-The AI must respond with a single paragraph and nothing else.
+* Return a JSON list of issues.
 
-Return that paragraph as a string.
+**Function 3:** apply_fixes(tf_content: str, sec_issues: str, cost_issues: str)
 
-Main Execution:
+* Call OpenAI as a Senior SRE. Provide the original Terraform along with both JSON reports.
 
-Call generate_compose('app_spec.txt', 'docker-compose.yml').
+* Ask it to rewrite the entire main.tf file, addressing all identified issues.
 
-Call analyze_networking('docker-compose.yml').
+* Save the corrected file as fixed_main.tfunder /root/openaiproject.
 
-print() the final networking explanation.
+**Main Execution:**
+
+* Read main.tf.
+
+* Run both scans (security and cost).
+
+* Apply the generated fixes using both reports.
+
+* print() a confirmation message once the fixed Terraform file is successfully generated.
 
 
-Notes:
+**Notes:**
 
-Ensure you are working in the /root/openaiproject directory.
+* Ensure you are working in the /root/openaiproject directory.
 
-Your API credentials will be provided under /root/.bash_profile.
+* Your API credentials will be provided under /root/.bash_profile.
 
-The script must create docker-compose.yml and then read from it during the second AI call.
+* You must successfully chain three API calls.
 
-The final output must be only the raw single-paragraph explanation.
+* The main.tf file is present under /root/openaiproject.
 
-Use temperature=0.0 for the YAML generation (Call 1) and temperature=0.5 & max_tokens = 300 for the networking analysis (Call 2).
+* The final output file fixed_main.tf must contain valid HCL with the specific fixes applied (changing the instance type and locking down the security group).
 
-Use hardcoded values for api_key and base_url when initializing the OpenAI client or read them from environment variables via os.environ.get('OPENAI_API_KEY') and os.environ.get('OPENAI_API_BASE').
+* Use temperature=0.0for Function 1,temperature=0.0 for Function 2&temperature=0.0forFunction 3.
 
-Before running docker_stack.py, create and activate a virtual environment, then install OpenAI using:
+* Use hardcoded values for api_key and base_url when initializing the OpenAI client or read them from environment variables via os.environ.get('OPENAI_API_KEY') and os.environ.get('OPENAI_API_BASE').
+
+* Before running tf_auditor.py, create and activate a virtual environment, then install OpenAI using:
 
 python3 -m venv venv && source venv/bin/activate && pip install openai
 
-You are allowed a maximum of 10 requests. After this, you may encounter a rate limiter error, so use your calls wisely.
+* You are allowed a maximum of 10 requests. After this, you may encounter a rate limiter error, so use your calls wisely.
 
-Answer:
-We’ll build the lab in `/root/openaiproject` with a two-stage Python workflow:
+# Answer:
+You can solve this lab by creating `tf_auditor.py` in `/root/openaiproject`, implementing three sequential OpenAI API calls, and verifying that `fixed_main.tf` contains the required Terraform security and cost fixes.
 
-1. DevOps Architect: Reads `app_spec.txt`, calls the OpenAI API using `gpt-5.6-luna` at temperature `0.0`, and saves the raw YAML to `docker-compose.yml`.
-2. Network Analyst: Reads the generated Compose file, makes a second API call at temperature `0.5` with `max_tokens=300`, and prints a single-paragraph networking explanation.
+I'll walk you through the setup, code, execution, and validation. You can do this entirely in your terminal.
 
-We’ll use environment variables for API credentials, preserve the required service dependency on `db` and `cache`, and avoid unnecessary API calls. The script will make exactly two model requests when both stages succeed.
-
-## Step 1: Open the project and activate a virtual environment
-
-Run these commands in your terminal:
+## Step 1: Navigate to the project directory
 
 bash
 ```
 cd /root/openaiproject
+ls -la
+```
 
-source /root/.bash_profile
+Confirm that `main.tf` exists:
 
+bash
+```
+cat main.tf
+```
+
+Look for the issues mentioned in the lab, such as an expensive EC2 instance type or a security group that allows SSH from `0.0.0.0/0`.
+
+## Step 2: Set up the virtual environment
+
+Run the requested commands:
+
+bash
+```
 python3 -m venv venv
 source venv/bin/activate
-
 pip install openai
 ```
 
-If you already have a virtual environment, you can reuse it instead of recreating it.
-
-## Step 2: Verify the API credentials and app specification
-
-Run:
+Verify the installation:
 
 bash
 ```
-cd /root/openaiproject
+python -c "import openai; print(openai.__version__)"
+```
+
+## Step 3: Load your API credentials
+
+The lab says your credentials are in `/root/.bash_profile`. Inspect the relevant variable names without printing their secret values:
+
+bash
+```
+grep -nE 'OPENAI_API_KEY|OPENAI_API_BASE' /root/.bash_profile
+```
+
+Load the profile:
+
+bash
+```
 source /root/.bash_profile
-
-test -n "$OPENAI_API_KEY" && echo "API key is set" || echo "API key is missing"
-test -n "$OPENAI_API_BASE" && echo "API base is set" || echo "API base is missing"
-
-ls -l app_spec.txt
-cat app_spec.txt
 ```
 
-Do not print or share the actual API key. If either variable is missing, check `/root/.bash_profile` and ensure the variables are exported under the expected names.
-
-## Step 3: Create `docker_stack.py`
-
-Run the following command from `/root/openaiproject`. It creates the complete script with both required API calls.
+Check that both variables are set:
 
 bash
+```
+python -c "import os; print('API key configured:', bool(os.environ.get('OPENAI_API_KEY'))); print('API base configured:', bool(os.environ.get('OPENAI_API_BASE')))"
+```
+
+If either value is missing, configure it according to the credentials provided by your lab. Do not share your API key in the terminal output or chat.
+
+## Step 4: Create `tf_auditor.py`
+
+Open the file in a terminal editor:
+
+bash
+```
+nano tf_auditor.py
+```
+
+Paste the following implementation. It uses the three required functions and chains the security report and cost report into the final rewrite call.
+
+python
 ````
 
-cat > docker_stack.py <<'PY'
+import json
 import os
 from pathlib import Path
+
 from openai import OpenAI
 
-# Always run the workflow from the project directory.
-PROJECT_DIR = Path(__file__).resolve().parent
-os.chdir(PROJECT_DIR)
-
-API_KEY = os.environ.get("OPENAI_API_KEY")
-BASE_URL = os.environ.get("OPENAI_API_BASE")
-
-if not API_KEY:
-    raise RuntimeError("OPENAI_API_KEY is not set.")
-if not BASE_URL:
-    raise RuntimeError("OPENAI_API_BASE is not set.")
-
+# Lab-provided API credentials are loaded from environment variables.
 client = OpenAI(
-    api_key=API_KEY,
-    base_url=BASE_URL,
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    base_url=os.environ.get("OPENAI_API_BASE"),
 )
 
-MODEL = "gpt-5.6-luna"
+PROJECT_DIR = Path("/root/openaiproject")
+INPUT_FILE = PROJECT_DIR / "main.tf"
+OUTPUT_FILE = PROJECT_DIR / "fixed_main.tf"
 
-def generate_compose(spec_path: str, output_path: str) -> None:
-    """Generate a Docker Compose YAML file from the application spec."""
-    spec_file = Path(spec_path)
-    output_file = Path(output_path)
-
-    app_spec = spec_file.read_text(encoding="utf-8")
-
+def security_scan(tf_content: str) -> str:
+    """Scan Terraform for security and compliance issues."""
     response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a DevOps Architect. Based on this app spec, "
-                    "write a complete, valid docker-compose.yml file. "
-                    "The web service must depend on db and cache. "
-                    "Use environment variables for the Postgres password. "
-                    "Respond ONLY with the raw YAML, with no Markdown "
-                    "fences (```yaml)."
-                ),
-            },
-            {
-                "role": "user",
-                "content": app_spec,
-            },
-        ],
+        model="gpt-5.6-luna",
         temperature=0.0,
-    )
-
-    yaml_content = response.choices[0].message.content
-    if not yaml_content:
-        raise RuntimeError("The Architect returned an empty YAML response.")
-
-    output_file.write_text(yaml_content.strip() + "\n", encoding="utf-8")
-
-def analyze_networking(compose_path: str) -> str:
-    """Analyze internal service communication in the generated Compose file."""
-    compose_file = Path(compose_path)
-    compose_content = compose_file.read_text(encoding="utf-8")
-
-    response = client.chat.completions.create(
-        model=MODEL,
         messages=[
             {
                 "role": "system",
                 "content": (
-                    "You are a network engineer. Read this Docker Compose "
-                    "file. In a single paragraph, explain how the web "
-                    "service can connect to the db service (mentioning "
-                    "service discovery names) and why the db port does not "
-                    "need to be exposed to the host machine."
+                    "You are a Terraform DevSecOps security linter. "
+                    "Identify concrete security issues, including SSH or other "
+                    "sensitive ports exposed to 0.0.0.0/0, overly permissive "
+                    "ingress rules, and missing encryption where applicable. "
+                    "Return ONLY a valid JSON array of issues. Each issue "
+                    "should contain resource, issue, severity, and recommendation. "
+                    "If there are no issues, return []. Do not use Markdown fences."
                 ),
             },
             {
                 "role": "user",
-                "content": compose_content,
+                "content": "Audit this Terraform configuration:\n\n" + tf_content,
             },
         ],
-        temperature=0.5,
-        max_tokens=300,
+    )
+    result = response.choices[0].message.content
+    if not result:
+        raise ValueError("Security scan returned an empty response.")
+    json.loads(result)
+    return result
+
+def cost_scan(tf_content: str) -> str:
+    """Scan Terraform for cost optimization opportunities."""
+    response = client.chat.completions.create(
+        model="gpt-5.6-luna",
+        temperature=0.0,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a cloud FinOps analyst auditing Terraform. "
+                    "Identify unnecessarily expensive resources and recommend "
+                    "lower-cost alternatives when appropriate. For example, "
+                    "consider t3.micro instead of m5.2xlarge only if it suits "
+                    "the workload. Return ONLY a valid JSON array of issues. "
+                    "Each issue should contain resource, current_configuration, "
+                    "issue, and recommendation. If there are no issues, return []. "
+                    "Do not use Markdown fences."
+                ),
+            },
+            {
+                "role": "user",
+                "content": "Audit this Terraform configuration for cost:\n\n"
+                + tf_content,
+            },
+        ],
+    )
+    result = response.choices[0].message.content
+    if not result:
+        raise ValueError("Cost scan returned an empty response.")
+    json.loads(result)
+    return result
+
+def apply_fixes(
+    tf_content: str,
+    sec_issues: str,
+    cost_issues: str,
+) -> str:
+    """Rewrite the complete Terraform file using both audit reports."""
+    # Validate both reports before sending them to the model.
+    json.loads(sec_issues)
+    json.loads(cost_issues)
+
+    response = client.chat.completions.create(
+        model="gpt-5.6-luna",
+        temperature=0.0,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a senior SRE and Terraform expert. Rewrite the "
+                    "entire supplied Terraform configuration, applying the "
+                    "security and cost fixes identified in the reports. "
+                    "Preserve unrelated resources and necessary functionality. "
+                    "Restrict SSH ingress to an explicitly approved trusted CIDR "
+                    "rather than 0.0.0.0/0. Do not invent a trusted IP: if none "
+                    "is provided, use a clearly marked placeholder such as "
+                    "REPLACE_WITH_TRUSTED_CIDR/32 and explain it in a Terraform "
+                    "comment. Apply the recommended instance type where suitable. "
+                    "Return ONLY the complete valid HCL source code, with no "
+                    "Markdown fences or explanatory prose."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Original main.tf:\n\n"
+                    + tf_content
+                    + "\n\nSecurity report (JSON):\n"
+                    + sec_issues
+                    + "\n\nCost report (JSON):\n"
+                    + cost_issues
+                    + "\n\nRewrite the entire main.tf with the fixes applied."
+                ),
+            },
+        ],
     )
 
-    explanation = response.choices[0].message.content
-    if not explanation:
-        raise RuntimeError("The Analyst returned an empty explanation.")
+    fixed_content = response.choices[0].message.content
+    if not fixed_content or not fixed_content.strip():
+        raise ValueError("Fix generation returned an empty response.")
 
-    return " ".join(explanation.split())
+    fixed_content = fixed_content.strip()
+
+    # Remove Markdown fences if the model unexpectedly adds them.
+    if fixed_content.startswith("```"):
+        lines = fixed_content.splitlines()
+        if lines[-1].strip() == "```":
+            fixed_content = "\n".join(lines[1:-1]).strip()
+        elif lines[0].startswith("```"):
+            fixed_content = "\n".join(lines[1:]).strip()
+
+    if not fixed_content:
+        raise ValueError("Generated Terraform content is empty.")
+
+    OUTPUT_FILE.write_text(fixed_content + "\n", encoding="utf-8")
+    return str(OUTPUT_FILE)
+
+def main():
+    if not INPUT_FILE.is_file():
+        raise FileNotFoundError(f"Terraform file not found: {INPUT_FILE}")
+
+    tf_content = INPUT_FILE.read_text(encoding="utf-8")
+
+    print("Stage 1/3: Running security scan...")
+    sec_issues = security_scan(tf_content)
+    print("Security scan completed.")
+    print(sec_issues)
+
+    print("\nStage 2/3: Running cost scan...")
+    cost_issues = cost_scan(tf_content)
+    print("Cost scan completed.")
+    print(cost_issues)
+
+    print("\nStage 3/3: Applying fixes...")
+    output_path = apply_fixes(tf_content, sec_issues, cost_issues)
+
+    print(f"\nSuccess: Fixed Terraform file generated at {output_path}")
 
 if __name__ == "__main__":
-    generate_compose("app_spec.txt", "docker-compose.yml")
-    explanation = analyze_networking("docker-compose.yml")
-    print(explanation)
-PY
+    main()
 ````
 
-This implementation reads the generated file back from disk before making the second request. It also ensures that the script prints only the networking explanation, not the YAML or additional status messages.
+Save and exit Nano with `Ctrl+O`, Enter, then `Ctrl+X`.
 
-## Step 4: Run the workflow
+Important: The example uses the model identifier exactly as your lab specifies, `gpt-5.6-luna`. If your lab's API endpoint does not recognize it, confirm the exact model identifier with the lab instructions or administrator rather than substituting a model arbitrarily.
 
-Make sure you are in the project directory and your virtual environment is active:
+## Step 5: Run the auditor
+
+First make sure the virtual environment is active and the credentials are available:
 
 bash
 ```
 cd /root/openaiproject
-source /root/.bash_profile
 source venv/bin/activate
-
-python docker_stack.py
+source /root/.bash_profile
 ```
 
-If the script succeeds, its terminal output will be the single-paragraph networking explanation.
-
-## Step 5: Verify the generated Compose file
-
-After the script finishes, open a separate terminal command or run these commands after the script has completed:
+Then execute:
 
 bash
 ```
-cd /root/openaiproject
-
-ls -l docker_stack.py docker-compose.yml
-cat docker-compose.yml
+python tf_auditor.py
 ```
 
-If Docker Compose is installed, validate the generated configuration:
+The expected sequence is:
+
+1. Security scan — returns a JSON array of security issues.
+2. Cost scan — returns a JSON array of cost optimization issues.
+3. Fix generation — submits the original Terraform and both reports, then writes the complete result to `fixed_main.tf`.
+
+The script makes three model API requests if all stages succeed.
+
+## Step 6: Verify the generated Terraform
+
+Check that the output exists and inspect it:
 
 bash
 ```
-docker compose config
+ls -l /root/openaiproject/fixed_main.tf
+cat /root/openaiproject/fixed_main.tf
 ```
 
-Check that the YAML contains:
+Check for the required remediations:
 
-- A `web` service with `depends_on` entries for `db` and `cache`.
-- A `db` service with its PostgreSQL password supplied through an environment variable, ideally using `${POSTGRES_PASSWORD}`.
-- A `cache` service.
-- No unnecessary host port mapping for PostgreSQL.
+bash
+```
+grep -nE 'instance_type|cidr_blocks|from_port|to_port|protocol' fixed_main.tf
+```
 
-## Step 6: Understand the expected networking explanation
+You should verify that:
 
-The Analyst should explain the following concepts in its own generated paragraph:
+- The expensive EC2 instance type has been changed to the recommended cheaper type, such as `t3.micro`, if appropriate for the workload.
+- SSH port 22 is no longer exposed to `0.0.0.0/0`.
+- Unrelated Terraform resources and required configuration have been preserved.
+- Any placeholder CIDR is replaced with your actual approved trusted CIDR before deployment.
 
-- Service discovery: Docker Compose provides DNS-based discovery between services on the same network. The web application can connect to the database using the hostname `db` and PostgreSQL's internal port, typically `5432`.
-- Internal networking: The web service does not need to connect through the host machine's IP address.
-- Port exposure: PostgreSQL does not need a host port mapping such as `5432:5432` for communication between Compose services. Host port publishing is only necessary if clients outside the Docker network need direct access.
+A model-generated file is not automatically guaranteed to be valid HCL. If Terraform is installed, validate the result:
+
+bash
+```
+terraform fmt -check fixed_main.tf
+terraform init -backend=false
+terraform validate
+```
+
+Run `terraform init` and `terraform validate` from the project directory. If the project has modules or providers requiring initialization, resolve any initialization errors before interpreting validation results.
 
 ## Step 7: Troubleshooting
 
-- Missing API credentials: Re-source `/root/.bash_profile` and verify that both expected environment variables are set.
-- Authentication or connection error: Check the API key, base URL, and network connectivity.
-- Model error: Confirm that `gpt-5.6-luna` is available through the configured API endpoint and supports the Chat Completions interface and requested parameters.
-- Invalid YAML: Inspect `docker-compose.yml` and validate it with `docker compose config`. The script requests raw YAML, but you should still validate the model's output.
+| Error | What to check |
+| --- | --- |
+| `AuthenticationError` | Confirm `OPENAI_API_KEY` is loaded and valid. |
+| Connection or base URL error | Verify `OPENAI_API_BASE` matches the lab endpoint. |
+| Model not found | Confirm the exact supported model identifier. |
+| Rate limit error | Avoid repeatedly rerunning all three stages; inspect the error and retry only when appropriate. |
+| Invalid JSON from a scan | The script will raise a JSON parsing error; inspect the model response before retrying. |
+| Terraform validation failure | Inspect the generated HCL and fix syntax or provider-specific errors. |
 
-Completion checklist
+### Final checklist
 
+- [ ]`tf_auditor.py` is in `/root/openaiproject`.
 - [ ]Virtual environment created and activated.
-- [ ]OpenAI package installed.
-- [ ]`docker_stack.py` created.
-- [ ]First API call generated `docker-compose.yml` at temperature `0.0`.
-- [ ]Second API call read that file and used temperature `0.5` and `max_tokens=300`.
-- [ ]Final output is one paragraph printed by `print(explanation)`.
+- [ ]OpenAI Python package installed.
+- [ ]API credentials loaded from the shell environment.
+- [ ]Both scans return valid JSON arrays.
+- [ ]The third call receives the original Terraform and both reports.
+- [ ]`fixed_main.tf` is generated at `/root/openaiproject/fixed_main.tf`.
+- [ ]The instance type and security group are corrected.
+- [ ]Terraform formatting and validation checks pass.
 
-Once these checks pass, the lab's two-stage workflow is complete.
+One final point: do not deploy the generated file just because the script prints success. Review the SSH CIDR, instance sizing, and HCL validation first. The script confirms that the file was written; it does not prove that the configuration is production-ready.
