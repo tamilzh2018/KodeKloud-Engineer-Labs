@@ -1,3 +1,18 @@
+# Task
+The xFusionCorp Industries ML platform team has established KServe on their Kind cluster and deployed a fraud-detector InferenceService, which is backed by a PVC-mounted Scikit-learn model. However, the InferenceService is not reaching a Ready state, as the predictor pod remains in Pending. Please investigate the cause of this issue and rectify the manifest located at /root/code/k8s/inference-service.yaml to ensure that the InferenceService transitions to Ready. After making the necessary adjustments, confirm that the predictor can successfully serve a prediction.
+
+
+KServe is installed on a kind cluster, and a fraud-detector InferenceService has been deployed — but it never reaches Ready and its predictor pod stays Pending. Inspect the predictor pod to see what is blocking it:
+
+kubectl describe pod -l serving.kserve.io/inferenceservice=fraud-detector
+
+The end state must include:
+
+kubectl get isvc fraud-detector shows the InferenceService.
+spec.predictor.model.storageUri references a PVC that exists in the namespace.
+.status.conditions[?(@.type=="Ready")].status == True (tests poll up to 360 s).
+A prediction request to the predictor's /v1/models/fraud-detector:predict returns a JSON predictions array.
+KServe's pvc:// storage scheme mounts the named PVC into the predictor pod at /mnt/models and lets the runtime read model artefacts from there. The reference must name a PVC that exists in the InferenceService's namespace.
 # Solution
 
 KServe is a Kubernetes-native model-serving platform: an `InferenceService` declares where a model lives (`storageUri`) and which runtime serves it, and KServe reconciles the predictor pods for you. This task hands you an InferenceService stuck at `READY=False` because its `storageUri` points at a PVC that doesn't exist, and you fix the reference so the predictor mounts the model and serves a prediction.
