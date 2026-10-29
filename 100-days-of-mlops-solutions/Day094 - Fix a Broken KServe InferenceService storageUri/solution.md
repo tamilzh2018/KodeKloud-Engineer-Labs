@@ -25,7 +25,7 @@ KServe is a Kubernetes-native model-serving platform: an `InferenceService` decl
 From a VS Code terminal:
 ```
 kubectl get pvc
-kubectl get isvc
+kubectl get isvc --> lists KServe InferenceService custom resources in your current Kubernetes namespace
 kubectl get pods -l serving.kserve.io/inferenceservice=fraud-detector
 kubectl describe pod -l serving.kserve.io/inferenceservice=fraud-detector \
   | awk '/Events/,/$/' | tail -15
