@@ -1,3 +1,22 @@
+# Task
+The xFusionCorp Industries MLOps team is building the GitOps deployment layer for their fraud-detector model server (an nginx stand-in — the rollout loop is image-agnostic). The server's Kubernetes manifests live in a Gitea repo, and ArgoCD should reconcile the cluster against that repo. The kind cluster, in-cluster Gitea with the seeded mlops-deploy repo, and ArgoCD are all in place, but no Application exists yet. Your task is to wire and drive the loop: complete application.yaml so ArgoCD tracks the mlops-deploy manifests and apply it, sync it to deploy the server, then roll a new image version by bumping the tag in the Gitea repo and syncing again.
+
+
+The Gitea UI (port 3000) and the ArgoCD UI (port 5000) buttons at the top of the lab open the relevant UIs. Both accept ArgoCD admin / adminadmin, Gitea gitops-admin / adminadmin. Pre-staged state:
+
+Gitea repo gitops-admin/mlops-deploy contains manifests/deployment.yaml (image nginx:1.25-alpine) and manifests/service.yaml (NodePort 30080, exposed on host :8085).
+ArgoCD is installed with the mlops-deploy repository already registered, but no Application exists yet — you create it.
+/root/code/application.yaml is a scaffold with three TODOs. Fill them so the Application tracks the repo:
+repo URL: http://gitea-http.gitea.svc.cluster.local:3000/gitops-admin/mlops-deploy.git
+manifests path: manifests
+destination namespace: default
+The target version is nginx:1.27-alpine. The end state must include:
+
+An ArgoCD Application fraud-detector exists and is Synced + Healthy (tests poll up to 240 s).
+manifests/deployment.yaml in the Gitea repo references nginx:1.27-alpine.
+The fraud-detector Deployment in default runs image nginx:1.27-alpine.
+http://localhost:8085/ returns HTTP 200 from the running pod.
+The source of truth is the Gitea repo — the rollout runs through the Gitea web editor and the ArgoCD UI. Reference manifests also live under /root/code/manifests/ for transparency, but edits to those local files are not tracked and will not roll out.
 # Solution
 
 **The platform.** xFusionCorp runs `fraud-detector` as a small production ML system: models are trained and served behind the `production` registry alias, an automated loop retrains on drift, the server is deployed by GitOps, and the running service is observed with Prometheus + Grafana. **This task builds the GitOps deployment layer** — the git repo is the source of truth, and an ArgoCD Application reconciles the cluster against it.
